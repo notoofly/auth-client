@@ -1,0 +1,51 @@
+{
+	"source": {
+		"include": ["./src/**/*.ts", "./index.ts", "./react/**/*.ts"],
+		"exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+	},
+	"opts": {
+		"destination": "./docs",
+		"readme": "./README.md",
+		"recurse": true,
+		"verbose": true
+	},
+	"plugins": ["typedoc-plugin-markdown", "typedoc-plugin-mermaid"],
+	"theme": "default",
+	"name": "Notoofly Auth Client",
+	"includeVersion": true,
+	"excludePrivate": false,
+	"excludeProtected": false,
+	"excludeExternals": true,
+	"hideGeneratorTimestamp": true,
+	"sort": ["source-order"],
+	"kindSortOrder": [
+		"Class",
+		"Interface",
+		"Type alias",
+		"Variable",
+		"Function",
+		"Enum",
+		"Namespace"
+	],
+	"categorizeByGroup": true,
+	"defaultCategory": "Other",
+	"categoryOrder": [
+		"Authentication",
+		"Token Management",
+		"MFA/OTP",
+		"React Integration",
+		"Utilities",
+		"Types",
+		"Other"
+	],
+	"gitRevision": "main",
+	"sourceLinkTemplate": "https://github.com/nootofly/auth-client/blob/{gitRevision}/{path}#L{line}",
+	"navigation": {
+		"includeCategories": true,
+		"includeGroups": true
+	},
+	"emit": "both",
+	"treatWarningsAsErrors": false,
+	"stripInternal": false,
+	"logLevel": "Info"
+}

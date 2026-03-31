@@ -1,0 +1,96 @@
+{
+	"name": "@notoofly/auth-client-node",
+	"module": "index.ts",
+	"type": "module",
+	"scripts": {
+		"test": "bun test",
+		"test:watch": "bun test --watch",
+		"test:coverage": "bun test --coverage",
+		"test:ci": "bun test --coverage --reporter=verbose",
+		"test:integration": "bun test tests/integration/",
+		"test:react": "bun test tests/react.test.tsx",
+		"test:client": "bun test tests/client.test.ts",
+		"test:api": "bun test tests/api-secret.test.ts",
+		"type-check": "tsc --noEmit",
+		"lint": "eslint . --ext .ts,.tsx",
+		"lint:fix": "eslint . --ext .ts,.tsx --fix",
+		"build": "bun build ./index.ts --outdir ./dist --target node --format esm",
+		"build:docs": "typedoc --options typedoc.json",
+		"docs:generate": "typedoc --options typedoc.json",
+		"docs:serve": "bun run docs:generate && bun -b docs",
+		"prepublishOnly": "bun run build && bun run test:ci",
+		"security:audit": "bun audit",
+		"performance:test": "bun test tests/performance/"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.8",
+		"@types/bun": "latest",
+		"@types/node": "^20.19.37",
+		"@types/react": "^19.2.14",
+		"@typescript-eslint/eslint-plugin": "^6.21.0",
+		"@typescript-eslint/parser": "^6.21.0",
+		"eslint": "^8.57.1",
+		"typedoc": "^0.25.13",
+		"typedoc-plugin-markdown": "^4.11.0",
+		"typedoc-plugin-mermaid": "^1.12.0"
+	},
+	"peerDependencies": {
+		"typescript": "^5.9.3",
+		"react": ">=18.0.0"
+	},
+	"dependencies": {
+		"i18next": "^26.0.1",
+		"i18next-browser-languagedetector": "^8.2.1",
+		"i18next-http-backend": "^3.0.2",
+		"jose": "^6.2.2",
+		"react": "^19.2.4"
+	},
+	"files": [
+		"index.ts",
+		"src/**/*",
+		"react/**/*",
+		"dist/**/*",
+		"README.md",
+		"API.md",
+		"LICENSE"
+	],
+	"exports": {
+		".": {
+			"import": "./index.ts",
+			"types": "./index.ts"
+		},
+		"./react": {
+			"import": "./react/index.ts",
+			"types": "./react/index.ts"
+		},
+		"./browser": {
+			"import": "./browser/index.ts",
+			"types": "./browser/index.ts"
+		}
+	},
+	"types": "./index.ts",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/notoofly/auth-client.git"
+	},
+	"keywords": [
+		"authentication",
+		"auth",
+		"jwt",
+		"mfa",
+		"otp",
+		"typescript",
+		"react",
+		"notoofly"
+	],
+	"author": "Notoofly Team",
+	"license": "Proprietary",
+	"bugs": {
+		"url": "https://github.com/notoofly/auth-client/issues"
+	},
+	"homepage": "https://github.com/notoofly/auth-client#readme",
+	"engines": {
+		"bun": ">=0.6.0",
+		"node": ">=16.0.0"
+	}
+}
