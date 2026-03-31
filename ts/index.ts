@@ -1,18 +1,18 @@
 /**
  * @fileoverview Notoofly Authentication Client - Node.js Version
- * 
+ *
  * A comprehensive TypeScript authentication client for Notoofly API.
  * Provides complete authentication functionality including MFA, token management,
  * password reset, device management, and admin features.
- * 
+ *
  * @author Notoofly Team
  * @version 1.0.0
  * @since 1.0.0
- * 
+ *
  * @example
  * ```typescript
  * import { NotooflyAuthClient } from '@notoofly/auth-client-node';
- * 
+ *
  * const authClient = new NotooflyAuthClient({
  *   authApiUrl: 'https://api.example.com',
  *   authApiHeaders: { 'Content-Type': 'application/json' },
@@ -21,7 +21,7 @@
  *   preAuthToken: { onExpired: (sub, type) => console.log('Expired') },
  *   accessToken: { onExpired: (sub, type) => console.log('Expired') }
  * });
- * 
+ *
  * // Sign in user
  * const result = await authClient.signIn({
  *   email: 'user@example.com',
@@ -42,8 +42,9 @@ import {
 import { RefreshManager } from "./core/RefreshManager";
 import { type DefaultTokenType, TokenStore } from "./core/TokenStore";
 import type {
+	AdminAuditQuery,
+	AdminAuditResponse,
 	AuthPasswordResetCompleteBody,
-	AuthPasswordResetCompleteResponse,
 	AuthPasswordResetRequestBody,
 	AuthPasswordResetRequestResponse,
 	AuthPasswordResetVerifyTokenBody,
@@ -55,13 +56,12 @@ import type {
 	AuthVerifyBody,
 	AuthVerifyResponse,
 	CsrfResponse,
+	HealthResponse,
 	MfaOtpEnableBody,
 	MfaOtpEnableResponse,
 	MfaOtpSendBody,
-	MfaOtpSendResponse,
 	MfaOtpStatusResponse,
 	MfaOtpVerifyBody,
-	MfaOtpVerifyResponse,
 	MfaTotpVerifyBody,
 	MfaTotpVerifyResponse,
 	TokenIntrospectionBody,
@@ -73,15 +73,12 @@ import type {
 	UserDeviceDeleteResponse,
 	UserDeviceListResponse,
 	UserMeResponse,
-	AdminAuditQuery,
-	AdminAuditResponse,
-	HealthResponse
 } from "./types/api";
 
 /**
  * HTTP headers object type
  * @typedef {Record<string, string>} HttpHeaders
- * 
+ *
  * @example
  * ```typescript
  * const headers: HttpHeaders = {
@@ -95,7 +92,7 @@ type HttpHeaders = Record<string, string>;
 /**
  * JWT payload type from jose library
  * @typedef {JWTPayload} JwtPayload
- * 
+ *
  * @example
  * ```typescript
  * const payload: JwtPayload = {
@@ -118,7 +115,7 @@ type JwtPayload = JWTPayload;
  * @property {Object} meta - Response metadata
  * @property {string} meta.requestId - Unique request identifier
  * @property {string} meta.timestamp - ISO timestamp of the error
- * 
+ *
  * @example
  * ```typescript
  * const error: ApiError = {
@@ -149,11 +146,11 @@ type ApiError = {
 /**
  * Sign up request body type alias
  * @typedef {AuthSignupBody} SignUpRequest
- * 
+ *
  * @property {string} email - User email address
  * @property {string} password - User password
  * @property {string} confirmPassword - Password confirmation
- * 
+ *
  * @example
  * ```typescript
  * const signUpData: SignUpRequest = {
@@ -172,10 +169,10 @@ type ApiError = {
 /**
  * Sign in request body type alias
  * @typedef {AuthSigninBody} SignInRequest
- * 
+ *
  * @property {string} email - User email address
  * @property {string} password - User password
- * 
+ *
  * @example
  * ```typescript
  * const signInData: SignInRequest = {
@@ -193,10 +190,10 @@ type ApiError = {
 /**
  * Account verification request type alias
  * @typedef {AuthVerifyBody} VerifyAccountRequest
- * 
+ *
  * @property {string} token - Verification token from email
  * @property {string} preAuthToken - Pre-authentication token
- * 
+ *
  * @example
  * ```typescript
  * const verifyData: VerifyAccountRequest = {
@@ -214,9 +211,9 @@ type ApiError = {
 /**
  * Send OTP request type alias
  * @typedef {MfaOtpSendBody} SendOtpRequest
- * 
+ *
  * @property {string} identifier - User identifier (email or phone)
- * 
+ *
  * @example
  * ```typescript
  * const otpData: SendOtpRequest = {
@@ -228,9 +225,9 @@ type ApiError = {
 /**
  * Verify OTP request type alias
  * @typedef {MfaOtpVerifyBody} VerifyOtpRequest
- * 
+ *
  * @property {string} otp - One-time password code
- * 
+ *
  * @example
  * ```typescript
  * const verifyOtpData: VerifyOtpRequest = {
@@ -242,9 +239,9 @@ type ApiError = {
 /**
  * Password reset request type alias
  * @typedef {AuthPasswordResetRequestBody} PasswordResetRequest
- * 
+ *
  * @property {string} identifier - User identifier (email or phone)
- * 
+ *
  * @example
  * ```typescript
  * const resetData: PasswordResetRequest = {
@@ -256,9 +253,9 @@ type ApiError = {
 /**
  * Password reset token verification request type alias
  * @typedef {AuthPasswordResetVerifyTokenBody} PasswordResetVerifyTokenRequest
- * 
+ *
  * @property {string} token - Password reset token
- * 
+ *
  * @example
  * ```typescript
  * const verifyTokenData: PasswordResetVerifyTokenRequest = {
@@ -275,12 +272,12 @@ type ApiError = {
 /**
  * Complete password reset request type alias
  * @typedef {AuthPasswordResetCompleteBody} PasswordResetCompleteRequest
- * 
+ *
  * @property {string} code - Reset code from email
  * @property {string} currentPassword - Current user password
  * @property {string} newPassword - New password
  * @property {string} newPasswordConfirmation - New password confirmation
- * 
+ *
  * @example
  * ```typescript
  * const completeResetData: PasswordResetCompleteRequest = {
@@ -295,11 +292,11 @@ type ApiError = {
 /**
  * Change password request type alias
  * @typedef {UserChangePasswordBody} ChangePasswordRequest
- * 
+ *
  * @property {string} currentPassword - Current user password
  * @property {string} newPassword - New password
  * @property {string} newPasswordConfirmation - New password confirmation
- * 
+ *
  * @example
  * ```typescript
  * const changePasswordData: ChangePasswordRequest = {
@@ -328,7 +325,7 @@ type ChangePasswordRequest = UserChangePasswordBody;
 /**
  * Configuration interface for NotooflyAuthClient
  * @interface NotooflyAuthClientConfig
- * 
+ *
  * @property {string} authApiUrl - Base URL for the authentication API
  * @property {I18nResources} [i18n] - Internationalization resources
  * @property {Record<string, string>} authApiHeaders - Default headers for API requests
@@ -342,7 +339,7 @@ type ChangePasswordRequest = UserChangePasswordBody;
  * @property {Function} [accessToken.onExpired] - Callback when access token expires
  * @property {string} accessToken.onExpired.sub - User subject identifier
  * @property {string} accessToken.onExpired.type - Token type
- * 
+ *
  * @example
  * ```typescript
  * const config: NotooflyAuthClientConfig = {
@@ -387,17 +384,17 @@ export interface NotooflyAuthClientConfig {
 
 /**
  * Main authentication SDK client for Notoofly API
- * 
+ *
  * This class provides a comprehensive authentication solution for Node.js applications,
  * including user registration, login, multi-factor authentication, token management,
  * password reset, device management, and admin functionality.
- * 
+ *
  * @class NotooflyAuthClient
- * 
+ *
  * @example
  * ```typescript
  * import { NotooflyAuthClient } from '@notoofly/auth-client-node';
- * 
+ *
  * // Create client instance
  * const authClient = new NotooflyAuthClient({
  *   authApiUrl: 'https://api.example.com',
@@ -411,27 +408,27 @@ export interface NotooflyAuthClientConfig {
  *     onExpired: (sub, type) => console.log(`Access token expired for ${sub}`)
  *   }
  * });
- * 
+ *
  * // Register a new user
  * await authClient.signUp({
  *   email: 'user@example.com',
  *   password: 'password123',
  *   confirmPassword: 'password123'
  * });
- * 
+ *
  * // Sign in user
  * const result = await authClient.signIn({
  *   email: 'user@example.com',
  *   password: 'password123'
  * });
- * 
+ *
  * // Check if user is authenticated
  * if (authClient.isAuthenticated()) {
  *   const user = authClient.getCurrentUser();
  *   console.log(`Authenticated as: ${user}`);
  * }
  * ```
- * 
+ *
  * @see {@link https://docs.notoofly.com} for more detailed documentation
  */
 export class NotooflyAuthClient {
@@ -443,7 +440,7 @@ export class NotooflyAuthClient {
 	/**
 	 * Create a new NotooflyAuthClient instance
 	 * @param {NotooflyAuthClientConfig} config - Configuration object
-	 * 
+	 *
 	 * @example
 	 * ```typescript
 	 * const authClient = new NotooflyAuthClient({
@@ -1070,7 +1067,10 @@ export class NotooflyAuthClient {
 	 */
 	private checkApiResponse<T>(response: ApiResponse<T>): ApiResponse<T> {
 		if (!response.success) {
-			throw new Error(response.message);
+			if (response.code === "API.VALIDATOR.ERROR") {
+				return response;
+			}
+			throw new Error(response.message + " " + response.code);
 		}
 		return response;
 	}

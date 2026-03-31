@@ -95,6 +95,11 @@ export type ApiResponse<T> = {
 	};
 	/** Human-readable message in the active language. */
 	message: string;
+	details?: {
+		reason: string;
+		field: string;
+	}[];
+	code?: string;
 	data: T;
 };
 
@@ -144,7 +149,14 @@ type RawPayload<T = unknown> = {
 	code?: string;
 	message?: string;
 	data?: T;
-	error?: { code?: string; message?: string };
+	error?: {
+		code?: string;
+		message?: string;
+		details?: {
+			field: string;
+			reason: string;
+		}[];
+	};
 	require?: Partial<ApiResponse<T>["require"]>;
 	[key: string]: unknown;
 };
@@ -301,7 +313,17 @@ export class ApiClient<L extends Language = "en"> {
 		let raw: RawPayload<T>;
 		try {
 			const res = await fetch(url, init);
-			raw = (await res.json()) as RawPayload<T>;
+			const text = await res.text();
+			if (text === "NOT_FOUND") {
+				raw = {
+					success: false,
+					error: {
+						code: "API.ROUTE.NOT_FOUND",
+					},
+				};
+			} else {
+				raw = JSON.parse(text);
+			}
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : "SYSTEM.CORE.ERROR";
 			return {
@@ -697,6 +719,7 @@ export class ApiClient<L extends Language = "en"> {
 			? this.#translate(code)
 			: (raw.message ?? raw.error?.message ?? "");
 		const data = (raw.data ?? {}) as T;
-		return { success, require, message, data };
+		const details = raw.error?.details;
+		return { success, require, message, data, details, code };
 	}
 }

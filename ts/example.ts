@@ -1,10 +1,10 @@
 /**
  * @fileoverview Complete example usage of Notoofly Auth Client
- * 
+ *
  * This example demonstrates all features of the Notoofly Authentication Client
  * including authentication, MFA, token management, device management,
  * password reset, admin functions, and error handling.
- * 
+ *
  * @author Notoofly Team
  * @version 1.0.0
  * @since 1.0.0
@@ -14,7 +14,7 @@ import { NotooflyAuthClient } from ".";
 
 /**
  * Complete example of Notoofly Auth Client usage
- * 
+ *
  * This function demonstrates all major features:
  * 1. User registration and authentication
  * 2. Multi-factor authentication (OTP/TOTP)
@@ -30,30 +30,30 @@ async function completeExample() {
 
 	// Initialize the client with latest configuration
 	const authClient = new NotooflyAuthClient({
-		authApiUrl: "https://api.example.com",
+		authApiUrl: "https://192.168.9.1:5000",
 		authApiHeaders: {
 			"Content-Type": "application/json",
 			"X-API-Version": "v1",
-			"User-Agent": "Notoofly-Auth-Client/1.0.0"
+			"User-Agent": "Notoofly-Auth-Client/1.0.0",
 		},
 		language: "en",
 		authApiRoutes: {
 			auth: {
-				signup: "/api/v1/auth/signup",
-				signin: "/api/v1/auth/signin"
-			}
+				signup: "/v1/auth/signup",
+				signin: "/v1/auth/signin",
+			},
 		},
 		preAuthToken: {
 			onExpired: (sub, type) => {
 				console.log(`⚠️ Pre-auth token expired for user: ${sub}, type: ${type}`);
-			}
+			},
 		},
 		accessToken: {
 			onExpired: (sub, type) => {
 				console.log(`⚠️ Access token expired for user: ${sub}, type: ${type}`);
 				// You can implement automatic token refresh here
-			}
-		}
+			},
+		},
 	});
 
 	// Example 1: User Registration
@@ -62,17 +62,25 @@ async function completeExample() {
 		const signUpResult = await authClient.signUp({
 			email: "user@example.com",
 			password: "SecurePass123!",
-			confirmPassword: "SecurePass123!"
+			confirmPassword: "SecurePass123!",
 		});
 
 		if (signUpResult.success) {
 			console.log("✅ Registration successful");
-			console.log("📧 Verification required:", signUpResult.data.code === "VERIFY.TOKEN.SENT");
-			console.log("🔑 Pre-auth token:", signUpResult.data.accessToken ? `${signUpResult.data.accessToken.substring(0, 20)}...` : "None");
+			console.log(
+				"📧 Verification required:",
+				signUpResult.data.code === "VERIFY.TOKEN.SENT",
+			);
+			console.log(
+				"🔑 Pre-auth token:",
+				signUpResult.data.accessToken
+					? `${signUpResult.data.accessToken.substring(0, 20)}...`
+					: "None",
+			);
 		} else {
 			console.log("❌ Registration failed:", signUpResult.message);
 		}
-	} catch (error) {
+	} catch (error: any) {
 		console.log("❌ Registration error:", error.message);
 	}
 
@@ -81,12 +89,15 @@ async function completeExample() {
 	try {
 		const verifyResult = await authClient.verifyAccount({
 			token: "verification-token-from-email",
-			preAuthToken: "pre-auth-token-from-signup"
+			preAuthToken: "pre-auth-token-from-signup",
 		});
 
 		if (verifyResult.success) {
 			console.log("✅ Email verified successfully");
-			console.log("🔑 Access token received:", verifyResult.data.accessToken ? "Yes" : "No");
+			console.log(
+				"🔑 Access token received:",
+				verifyResult.data.accessToken ? "Yes" : "No",
+			);
 		} else {
 			console.log("❌ Email verification failed:", verifyResult.message);
 		}
@@ -99,7 +110,7 @@ async function completeExample() {
 	try {
 		const signInResult = await authClient.signIn({
 			email: "user@example.com",
-			password: "SecurePass123!"
+			password: "SecurePass123!",
 		});
 
 		if (signInResult.success) {
@@ -124,7 +135,7 @@ async function completeExample() {
 	console.log("\n🔍 4. Checking authentication status...");
 	if (authClient.isAuthenticated()) {
 		console.log("✅ User is authenticated");
-		
+
 		// Get current user
 		const currentUser = authClient.getCurrentUser();
 		console.log("👤 Current user ID:", currentUser);
@@ -136,7 +147,7 @@ async function completeExample() {
 				sub: tokenPayload.sub,
 				iss: tokenPayload.iss,
 				exp: new Date(tokenPayload.exp * 1000).toISOString(),
-				iat: new Date(tokenPayload.iat * 1000).toISOString()
+				iat: new Date(tokenPayload.iat * 1000).toISOString(),
 			});
 		}
 
@@ -147,7 +158,7 @@ async function completeExample() {
 				console.log("👤 User profile:", {
 					id: profileResult.data.user?.id,
 					email: profileResult.data.user?.email,
-					mfaEnabled: profileResult.data.user?.mfaEnabled
+					mfaEnabled: profileResult.data.user?.mfaEnabled,
 				});
 			}
 		} catch (error) {
@@ -168,7 +179,7 @@ async function completeExample() {
 				console.log("📊 OTP Status:", {
 					enabled: otpStatusResult.data.status2FA,
 					hasOtp: otpStatusResult.data.hasOtp,
-					hasTotp: otpStatusResult.data.hasTotp
+					hasTotp: otpStatusResult.data.hasTotp,
 				});
 			}
 		} catch (error) {
@@ -178,7 +189,7 @@ async function completeExample() {
 		// Send OTP
 		try {
 			const sendOtpResult = await authClient.sendOtp({
-				identifier: "user@example.com"
+				identifier: "user@example.com",
 			});
 			if (sendOtpResult.success) {
 				console.log("✅ OTP sent successfully");
@@ -191,7 +202,7 @@ async function completeExample() {
 		// Enable OTP 2FA
 		try {
 			const enableOtpResult = await authClient.toggleOtp({
-				enable: true
+				enable: true,
 			});
 			if (enableOtpResult.success) {
 				console.log("✅ OTP 2FA enabled");
@@ -204,11 +215,14 @@ async function completeExample() {
 		// Verify OTP (simulated)
 		try {
 			const verifyOtpResult = await authClient.verifyOtp({
-				otp: "123456"
+				otp: "123456",
 			});
 			if (verifyOtpResult.success) {
 				console.log("✅ OTP verified successfully");
-				console.log("🔑 New access token:", verifyOtpResult.data.accessToken ? "Received" : "None");
+				console.log(
+					"🔑 New access token:",
+					verifyOtpResult.data.accessToken ? "Received" : "None",
+				);
 			}
 		} catch (error) {
 			console.log("❌ Verify OTP error:", error.message);
@@ -217,11 +231,11 @@ async function completeExample() {
 
 	// Example 6: Token Management
 	console.log("\n🔑 6. Token Management...");
-	
+
 	// Get current tokens
 	const accessToken = authClient.getAccessToken();
 	const tokenPayload = authClient.getTokenPayload();
-	
+
 	console.log("🔑 Access token exists:", !!accessToken);
 	console.log("📋 Token payload exists:", !!tokenPayload);
 
@@ -247,14 +261,16 @@ async function completeExample() {
 	// Introspect token
 	try {
 		const introspectResult = await authClient.introspectToken({
-			token: accessToken || "dummy-token"
+			token: accessToken || "dummy-token",
 		});
 		if (introspectResult.success) {
 			console.log("📊 Token introspection:", {
 				active: introspectResult.data.active,
 				sub: introspectResult.data.sub,
-				exp: introspectResult.data.exp ? new Date(introspectResult.data.exp * 1000).toISOString() : "N/A",
-				scope: introspectResult.data.scope
+				exp: introspectResult.data.exp
+					? new Date(introspectResult.data.exp * 1000).toISOString()
+					: "N/A",
+				scope: introspectResult.data.scope,
 			});
 		}
 	} catch (error) {
@@ -265,7 +281,10 @@ async function completeExample() {
 	try {
 		const csrfResult = await authClient.generateCsrfToken();
 		if (csrfResult.success) {
-			console.log("🔒 CSRF token generated:", csrfResult.data.csrfToken ? "Yes" : "No");
+			console.log(
+				"🔒 CSRF token generated:",
+				csrfResult.data.csrfToken ? "Yes" : "No",
+			);
 		}
 	} catch (error) {
 		console.log("❌ CSRF token error:", error.message);
@@ -295,7 +314,7 @@ async function completeExample() {
 			const devices = await authClient.getUserDevices();
 			if (devices.success && devices.data.devices.length > 0) {
 				const deleteResult = await authClient.deleteUserDevice({
-					refreshId: devices.data.devices[0].id
+					refreshId: devices.data.devices[0].id,
 				});
 				if (deleteResult.success) {
 					console.log("✅ Device deleted successfully");
@@ -315,7 +334,7 @@ async function completeExample() {
 			const changePasswordResult = await authClient.changePassword({
 				currentPassword: "SecurePass123!",
 				newPassword: "NewSecurePass456!",
-				newPasswordConfirmation: "NewSecurePass456!"
+				newPasswordConfirmation: "NewSecurePass456!",
 			});
 			if (changePasswordResult.success) {
 				console.log("✅ Password changed successfully");
@@ -331,7 +350,7 @@ async function completeExample() {
 	// Request password reset
 	try {
 		const resetRequestResult = await authClient.requestPasswordReset({
-			identifier: "user@example.com"
+			identifier: "user@example.com",
 		});
 		if (resetRequestResult.success) {
 			console.log("✅ Password reset requested");
@@ -344,11 +363,14 @@ async function completeExample() {
 	// Verify password reset token
 	try {
 		const verifyResetTokenResult = await authClient.verifyPasswordResetToken({
-			token: "reset-token-from-email"
+			token: "reset-token-from-email",
 		});
 		if (verifyResetTokenResult.success) {
 			console.log("✅ Reset token verified");
-			console.log("🔑 Pre-auth token:", verifyResetTokenResult.data.preAuthToken ? "Received" : "None");
+			console.log(
+				"🔑 Pre-auth token:",
+				verifyResetTokenResult.data.preAuthToken ? "Received" : "None",
+			);
 		}
 	} catch (error) {
 		console.log("❌ Verify reset token error:", error.message);
@@ -360,7 +382,7 @@ async function completeExample() {
 			code: "123456",
 			currentPassword: "OldPassword",
 			newPassword: "NewPassword123!",
-			newPasswordConfirmation: "NewPassword123!"
+			newPasswordConfirmation: "NewPassword123!",
 		});
 		if (completeResetResult.success) {
 			console.log("✅ Password reset completed");
@@ -378,7 +400,7 @@ async function completeExample() {
 			const auditResult = await authClient.getAuditLog({
 				page: 1,
 				limit: 10,
-				action: "USER.LOGIN"
+				action: "USER.LOGIN",
 			});
 			if (auditResult.success) {
 				console.log("📊 Audit log entries:", auditResult.data.audit.length);
@@ -400,7 +422,7 @@ async function completeExample() {
 			console.log("📊 System status:", healthResult.data.status);
 			console.log("⏱️ Uptime:", healthResult.data.uptime);
 			console.log("📦 Version:", healthResult.data.version);
-			
+
 			// Check dependencies
 			const deps = healthResult.data.dependencies;
 			console.log("🗄️ Database:", deps.database);
@@ -424,7 +446,10 @@ async function completeExample() {
 	}
 
 	// Verify logged out
-	console.log("📊 Authentication status after logout:", authClient.isAuthenticated());
+	console.log(
+		"📊 Authentication status after logout:",
+		authClient.isAuthenticated(),
+	);
 
 	// Clear all tokens
 	authClient.clearAllTokens();
@@ -446,7 +471,7 @@ async function quickStartExample() {
 	// Minimal configuration
 	const authClient = new NotooflyAuthClient({
 		authApiUrl: "https://api.example.com",
-		language: "en"
+		language: "en",
 	});
 
 	try {
@@ -454,7 +479,7 @@ async function quickStartExample() {
 		const signUpResult = await authClient.signUp({
 			email: "user@example.com",
 			password: "Password123!",
-			confirmPassword: "Password123!"
+			confirmPassword: "Password123!",
 		});
 
 		if (signUpResult.success) {
@@ -463,12 +488,15 @@ async function quickStartExample() {
 			// Sign in
 			const signInResult = await authClient.signIn({
 				email: "user@example.com",
-				password: "Password123!"
+				password: "Password123!",
 			});
 
 			if (signInResult.success) {
 				console.log("✅ User signed in successfully");
-				console.log("🔑 Access token:", signInResult.data.accessToken ? "Received" : "None");
+				console.log(
+					"🔑 Access token:",
+					signInResult.data.accessToken ? "Received" : "None",
+				);
 
 				// Check authentication
 				if (authClient.isAuthenticated()) {
@@ -497,18 +525,18 @@ async function errorHandlingExample() {
 
 	const authClient = new NotooflyAuthClient({
 		authApiUrl: "https://api.example.com",
-		language: "en"
+		language: "en",
 	});
 
 	// Example 1: Invalid credentials
 	try {
 		await authClient.signIn({
 			email: "invalid@example.com",
-			password: "wrongpassword"
+			password: "wrongpassword",
 		});
 	} catch (error) {
 		console.log("🚨 Invalid credentials error:", error.message);
-		
+
 		// Handle specific error cases
 		if (error.message.includes("INVALID_CREDENTIALS")) {
 			console.log("💡 Show invalid credentials message to user");
@@ -522,12 +550,12 @@ async function errorHandlingExample() {
 		// Simulate network error with invalid URL
 		const invalidClient = new NotooflyAuthClient({
 			authApiUrl: "https://invalid-url-that-does-not-exist.com",
-			language: "en"
+			language: "en",
 		});
-		
+
 		await invalidClient.signIn({
 			email: "user@example.com",
-			password: "password"
+			password: "password",
 		});
 	} catch (error) {
 		console.log("🚨 Network error:", error.message);
@@ -539,7 +567,7 @@ async function errorHandlingExample() {
 		await authClient.signUp({
 			email: "invalid-email",
 			password: "123",
-			confirmPassword: "456"
+			confirmPassword: "456",
 		});
 	} catch (error) {
 		console.log("🚨 Validation error:", error.message);
@@ -567,9 +595,9 @@ async function runExamples() {
 			break;
 		case "all":
 			await quickStartExample();
-			console.log("\n" + "=".repeat(50) + "\n");
+			console.log(`\n${"=".repeat(50)}\n`);
 			await completeExample();
-			console.log("\n" + "=".repeat(50) + "\n");
+			console.log(`\n${"=".repeat(50)}\n`);
 			await errorHandlingExample();
 			break;
 		default:
@@ -583,5 +611,5 @@ if (import.meta.main) {
 	runExamples().catch(console.error);
 }
 
-export { completeExample, quickStartExample, errorHandlingExample };
+export { completeExample, errorHandlingExample, quickStartExample };
 export default completeExample;

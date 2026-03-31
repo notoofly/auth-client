@@ -1,19 +1,19 @@
 /**
  * @fileoverview React Hook for Notoofly Authentication Client
- * 
+ *
  * A React Hook that provides state management and authentication actions for React applications.
  * This hook wraps the NotooflyAuthClient and provides automatic state management for
  * loading states, authentication status, user information, and error handling.
- * 
+ *
  * @author Notoofly Team
  * @version 1.0.0
  * @since 1.0.0
- * 
+ *
  * @example
  * ```tsx
  * import React from 'react';
  * import { useNotooflyAuth } from '@notoofly/auth-client-node/react';
- * 
+ *
  * function LoginComponent() {
  *   const {
  *     isLoading,
@@ -32,7 +32,7 @@
  *     preAuthToken: {},
  *     accessToken: {}
  *   });
- * 
+ *
  *   const handleSignIn = async () => {
  *     try {
  *       await signIn({ email: 'user@example.com', password: 'password' });
@@ -40,9 +40,9 @@
  *       console.error('Sign in failed:', error);
  *     }
  *   };
- * 
+ *
  *   if (isLoading) return <div>Loading...</div>;
- * 
+ *
  *   if (isAuthenticated) {
  *     return (
  *       <div>
@@ -51,7 +51,7 @@
  *       </div>
  *     );
  *   }
- * 
+ *
  *   return (
  *     <div>
  *       <h1>Sign In</h1>
@@ -64,8 +64,8 @@
  * ```
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
 import type { JWTPayload } from "jose";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
 	ApiClient,
 	type ApiResponse,
@@ -75,10 +75,11 @@ import {
 	type RoutesConfig,
 } from "../core/ApiClient";
 import { RefreshManager } from "../core/RefreshManager";
-import { type DefaultTokenType, TokenStore } from "../core/TokenStore";
+import { TokenStore } from "../core/TokenStore";
 import type {
+	AdminAuditQuery,
+	AdminAuditResponse,
 	AuthPasswordResetCompleteBody,
-	AuthPasswordResetCompleteResponse,
 	AuthPasswordResetRequestBody,
 	AuthPasswordResetRequestResponse,
 	AuthPasswordResetVerifyTokenBody,
@@ -90,13 +91,12 @@ import type {
 	AuthVerifyBody,
 	AuthVerifyResponse,
 	CsrfResponse,
+	HealthResponse,
 	MfaOtpEnableBody,
 	MfaOtpEnableResponse,
 	MfaOtpSendBody,
-	MfaOtpSendResponse,
 	MfaOtpStatusResponse,
 	MfaOtpVerifyBody,
-	MfaOtpVerifyResponse,
 	MfaTotpVerifyBody,
 	MfaTotpVerifyResponse,
 	TokenIntrospectionBody,
@@ -108,9 +108,6 @@ import type {
 	UserDeviceDeleteResponse,
 	UserDeviceListResponse,
 	UserMeResponse,
-	AdminAuditQuery,
-	AdminAuditResponse,
-	HealthResponse
 } from "../types/api";
 
 // Type definitions for better compatibility
@@ -167,27 +164,64 @@ export interface UseNotooflyAuthState {
 }
 
 export interface UseNotooflyAuthActions {
-	signUp: (data: SignUpRequest, headers?: HttpHeaders) => Promise<ApiResponse<SignUpResponse>>;
-	signIn: (data: SignInRequest, headers?: HttpHeaders) => Promise<ApiResponse<SignInResponse>>;
-	verifyAccount: (data: VerifyAccountRequest, headers?: HttpHeaders) => Promise<ApiResponse<VerifyAccountResponse>>;
-	sendOtp: (data: SendOtpRequest, headers?: HttpHeaders) => Promise<ApiResponse<{ code: string }>>;
-	verifyOtp: (data: VerifyOtpRequest, headers?: HttpHeaders) => Promise<ApiResponse<any>>;
+	signUp: (
+		data: SignUpRequest,
+		headers?: HttpHeaders,
+	) => Promise<ApiResponse<SignUpResponse>>;
+	signIn: (
+		data: SignInRequest,
+		headers?: HttpHeaders,
+	) => Promise<ApiResponse<SignInResponse>>;
+	verifyAccount: (
+		data: VerifyAccountRequest,
+		headers?: HttpHeaders,
+	) => Promise<ApiResponse<VerifyAccountResponse>>;
+	sendOtp: (
+		data: SendOtpRequest,
+		headers?: HttpHeaders,
+	) => Promise<ApiResponse<{ code: string }>>;
+	verifyOtp: (
+		data: VerifyOtpRequest,
+		headers?: HttpHeaders,
+	) => Promise<ApiResponse<any>>;
 	getProfile: (headers?: HttpHeaders) => Promise<ApiResponse<UserMeResponse>>;
 	refreshToken: () => Promise<string>;
 	logout: (headers?: HttpHeaders) => Promise<ApiResponse<{ code: string }>>;
-	requestPasswordReset: (data: PasswordResetRequest, headers?: HttpHeaders) => Promise<ApiResponse<AuthPasswordResetRequestResponse>>;
-	verifyPasswordResetToken: (data: PasswordResetVerifyTokenRequest, headers?: HttpHeaders) => Promise<ApiResponse<PasswordResetVerifyTokenResponse>>;
-	completePasswordReset: (data: PasswordResetCompleteRequest, headers?: HttpHeaders) => Promise<ApiResponse<{ code: string }>>;
-	changePassword: (data: ChangePasswordRequest, headers?: HttpHeaders) => Promise<ApiResponse<UserChangePasswordResponse>>;
+	requestPasswordReset: (
+		data: PasswordResetRequest,
+		headers?: HttpHeaders,
+	) => Promise<ApiResponse<AuthPasswordResetRequestResponse>>;
+	verifyPasswordResetToken: (
+		data: PasswordResetVerifyTokenRequest,
+		headers?: HttpHeaders,
+	) => Promise<ApiResponse<PasswordResetVerifyTokenResponse>>;
+	completePasswordReset: (
+		data: PasswordResetCompleteRequest,
+		headers?: HttpHeaders,
+	) => Promise<ApiResponse<{ code: string }>>;
+	changePassword: (
+		data: ChangePasswordRequest,
+		headers?: HttpHeaders,
+	) => Promise<ApiResponse<UserChangePasswordResponse>>;
 	checkRefreshToken: () => Promise<ApiResponse<TokenRefreshTokenResponse>>;
-	introspectToken: (data: TokenIntrospectionBody) => Promise<ApiResponse<TokenIntrospectionResponse>>;
+	introspectToken: (
+		data: TokenIntrospectionBody,
+	) => Promise<ApiResponse<TokenIntrospectionResponse>>;
 	generateCsrfToken: () => Promise<ApiResponse<CsrfResponse>>;
 	getOtpStatus: () => Promise<ApiResponse<MfaOtpStatusResponse>>;
-	toggleOtp: (data: MfaOtpEnableBody) => Promise<ApiResponse<MfaOtpEnableResponse>>;
-	verifyTotp: (data: MfaTotpVerifyBody) => Promise<ApiResponse<MfaTotpVerifyResponse>>;
+	toggleOtp: (
+		data: MfaOtpEnableBody,
+	) => Promise<ApiResponse<MfaOtpEnableResponse>>;
+	verifyTotp: (
+		data: MfaTotpVerifyBody,
+	) => Promise<ApiResponse<MfaTotpVerifyResponse>>;
 	getUserDevices: () => Promise<ApiResponse<UserDeviceListResponse>>;
-	deleteUserDevice: (data: UserDeviceDeleteBody) => Promise<ApiResponse<UserDeviceDeleteResponse>>;
-	getAuditLog: (query?: AdminAuditQuery) => Promise<ApiResponse<AdminAuditResponse>>;
+	deleteUserDevice: (
+		data: UserDeviceDeleteBody,
+	) => Promise<ApiResponse<UserDeviceDeleteResponse>>;
+	getAuditLog: (
+		query?: AdminAuditQuery,
+	) => Promise<ApiResponse<AdminAuditResponse>>;
 	checkHealth: () => Promise<ApiResponse<HealthResponse>>;
 	clearError: () => void;
 	destroy: () => void;
@@ -197,7 +231,9 @@ export interface UseNotooflyAuthActions {
  * React Hook for Notoofly Authentication
  * Provides state management and authentication actions for React applications
  */
-export function useNotooflyAuth(config: NotooflyAuthClientConfig): UseNotooflyAuthState & UseNotooflyAuthActions {
+export function useNotooflyAuth(
+	config: NotooflyAuthClientConfig,
+): UseNotooflyAuthState & UseNotooflyAuthActions {
 	const [state, setState] = useState<UseNotooflyAuthState>({
 		isLoading: false,
 		isAuthenticated: false,
@@ -243,34 +279,50 @@ export function useNotooflyAuth(config: NotooflyAuthClientConfig): UseNotooflyAu
 		return () => {
 			destroy();
 		};
-	}, []);
+	}, [
+		// Check initial authentication state
+		checkAuthState,
+		config.accessToken.onExpired,
+		config.authApiHeaders,
+		config.authApiRoutes,
+		config.authApiUrl,
+		config.i18n,
+		config.language,
+		config.preAuthToken.onExpired,
+		destroy,
+	]);
 
 	const setLoading = (loading: boolean) => {
-		setState(prev => ({ ...prev, isLoading: loading }));
+		setState((prev) => ({ ...prev, isLoading: loading }));
 	};
 
 	const setError = (error: string | null) => {
-		setState(prev => ({ ...prev, error }));
+		setState((prev) => ({ ...prev, error }));
 	};
 
 	const clearError = () => {
-		setState(prev => ({ ...prev, error: null }));
+		setState((prev) => ({ ...prev, error: null }));
 	};
 
 	const updateUserState = () => {
 		if (accessTokenRef.current) {
 			const users = accessTokenRef.current.entries().map(([sub]) => sub);
-			const authenticatedUser = users.find((sub) => accessTokenRef.current?.has(sub, "accessToken"));
-			
+			const authenticatedUser = users.find((sub) =>
+				accessTokenRef.current?.has(sub, "accessToken"),
+			);
+
 			if (authenticatedUser) {
-				const payload = accessTokenRef.current.getPayload(authenticatedUser, "accessToken");
-				setState(prev => ({
+				const payload = accessTokenRef.current.getPayload(
+					authenticatedUser,
+					"accessToken",
+				);
+				setState((prev) => ({
 					...prev,
 					isAuthenticated: true,
 					user: payload,
 				}));
 			} else {
-				setState(prev => ({
+				setState((prev) => ({
 					...prev,
 					isAuthenticated: false,
 					user: null,
@@ -281,7 +333,7 @@ export function useNotooflyAuth(config: NotooflyAuthClientConfig): UseNotooflyAu
 
 	const checkAuthState = useCallback(() => {
 		updateUserState();
-	}, []);
+	}, [updateUserState]);
 
 	const handleApiError = (error: unknown): never => {
 		if (error instanceof Error) {
@@ -305,7 +357,7 @@ export function useNotooflyAuth(config: NotooflyAuthClientConfig): UseNotooflyAu
 			}
 
 			const payload = parts[1];
-			const decoded = base64Decode(payload || '');
+			const decoded = base64Decode(payload || "");
 			return JSON.parse(decoded);
 		} catch {
 			return null;
@@ -361,7 +413,7 @@ export function useNotooflyAuth(config: NotooflyAuthClientConfig): UseNotooflyAu
 			preAuthTokenRef.current.clear();
 		}
 		clearGlobalHeaders();
-		setState(prev => ({
+		setState((prev) => ({
 			...prev,
 			isAuthenticated: false,
 			user: null,
@@ -371,17 +423,24 @@ export function useNotooflyAuth(config: NotooflyAuthClientConfig): UseNotooflyAu
 	const getAccessToken = (): string | null => {
 		if (!accessTokenRef.current) return null;
 		const users = accessTokenRef.current.entries().map(([sub]) => sub);
-		const currentUser = users.find((sub) => accessTokenRef.current?.has(sub, "accessToken"));
-		return currentUser ? accessTokenRef.current.getToken(currentUser, "accessToken") : null;
+		const currentUser = users.find((sub) =>
+			accessTokenRef.current?.has(sub, "accessToken"),
+		);
+		return currentUser
+			? accessTokenRef.current.getToken(currentUser, "accessToken")
+			: null;
 	};
 
 	const getCurrentUser = (): string | null => {
 		if (!accessTokenRef.current) return null;
 		const users = accessTokenRef.current.entries().map(([sub]) => sub);
-		return users.find((sub) => accessTokenRef.current?.has(sub, "accessToken")) || null;
+		return (
+			users.find((sub) => accessTokenRef.current?.has(sub, "accessToken")) ||
+			null
+		);
 	};
 
-	const getTokenPayload = (): JwtPayload | null => {
+	const _getTokenPayload = (): JwtPayload | null => {
 		const currentUser = getCurrentUser();
 		if (!currentUser || !accessTokenRef.current) {
 			return null;
@@ -424,7 +483,10 @@ export function useNotooflyAuth(config: NotooflyAuthClientConfig): UseNotooflyAu
 							if (accessTokenRef.current) {
 								const payload = decodeJwt(newAccessToken);
 								if (payload?.sub) {
-									accessTokenRef.current.setToken(newAccessToken, "accessToken");
+									accessTokenRef.current.setToken(
+										newAccessToken,
+										"accessToken",
+									);
 									updateGlobalHeaders(newAccessToken);
 								}
 							}
@@ -459,197 +521,304 @@ export function useNotooflyAuth(config: NotooflyAuthClientConfig): UseNotooflyAu
 	};
 
 	// Authentication methods
-	const signUp = useCallback(async (data: SignUpRequest, headers?: HttpHeaders): Promise<ApiResponse<SignUpResponse>> => {
-		setLoading(true);
-		clearError();
-		
-		try {
-			if (!apiClientRef.current) throw new Error("API client not initialized");
-			
-			const response = await apiClientRef.current.authSignup(data);
-			checkApiResponse(response);
+	const signUp = useCallback(
+		async (
+			data: SignUpRequest,
+			_headers?: HttpHeaders,
+		): Promise<ApiResponse<SignUpResponse>> => {
+			setLoading(true);
+			clearError();
 
-			// Store tokens if returned
-			if (response.data.accessToken) {
-				const payload = decodeJwt(response.data.accessToken);
-				if (payload?.sub && accessTokenRef.current) {
-					accessTokenRef.current.setToken(response.data.accessToken, "accessToken");
-					updateGlobalHeaders(response.data.accessToken);
-					updateUserState();
+			try {
+				if (!apiClientRef.current)
+					throw new Error("API client not initialized");
+
+				const response = await apiClientRef.current.authSignup(data);
+				checkApiResponse(response);
+
+				// Store tokens if returned
+				if (response.data.accessToken) {
+					const payload = decodeJwt(response.data.accessToken);
+					if (payload?.sub && accessTokenRef.current) {
+						accessTokenRef.current.setToken(
+							response.data.accessToken,
+							"accessToken",
+						);
+						updateGlobalHeaders(response.data.accessToken);
+						updateUserState();
+					}
 				}
+
+				return response;
+			} catch (error) {
+				const errorMessage =
+					error instanceof Error ? error.message : "Sign up failed";
+				setError(errorMessage);
+				throw handleApiError(error);
+			} finally {
+				setLoading(false);
 			}
+		},
+		[
+			checkApiResponse,
+			clearError,
+			decodeJwt,
+			handleApiError,
+			setError,
+			setLoading,
+			updateGlobalHeaders,
+			updateUserState,
+		],
+	);
 
-			return response;
-		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : "Sign up failed";
-			setError(errorMessage);
-			throw handleApiError(error);
-		} finally {
-			setLoading(false);
-		}
-	}, []);
+	const signIn = useCallback(
+		async (
+			data: SignInRequest,
+			_headers?: HttpHeaders,
+		): Promise<ApiResponse<SignInResponse>> => {
+			setLoading(true);
+			clearError();
 
-	const signIn = useCallback(async (data: SignInRequest, headers?: HttpHeaders): Promise<ApiResponse<SignInResponse>> => {
-		setLoading(true);
-		clearError();
-		
-		try {
-			if (!apiClientRef.current) throw new Error("API client not initialized");
-			
-			const response = await apiClientRef.current.authSignin(data);
-			checkApiResponse(response);
+			try {
+				if (!apiClientRef.current)
+					throw new Error("API client not initialized");
 
-			// Store tokens if returned
-			if (response.data.accessToken) {
-				const payload = decodeJwt(response.data.accessToken);
-				if (payload?.sub && accessTokenRef.current) {
-					accessTokenRef.current.setToken(response.data.accessToken, "accessToken");
-					updateGlobalHeaders(response.data.accessToken);
-					updateUserState();
+				const response = await apiClientRef.current.authSignin(data);
+				checkApiResponse(response);
+
+				// Store tokens if returned
+				if (response.data.accessToken) {
+					const payload = decodeJwt(response.data.accessToken);
+					if (payload?.sub && accessTokenRef.current) {
+						accessTokenRef.current.setToken(
+							response.data.accessToken,
+							"accessToken",
+						);
+						updateGlobalHeaders(response.data.accessToken);
+						updateUserState();
+					}
 				}
+
+				return response;
+			} catch (error) {
+				const errorMessage =
+					error instanceof Error ? error.message : "Sign in failed";
+				setError(errorMessage);
+				throw handleApiError(error);
+			} finally {
+				setLoading(false);
 			}
+		},
+		[
+			checkApiResponse,
+			clearError,
+			decodeJwt,
+			handleApiError,
+			setError,
+			setLoading,
+			updateGlobalHeaders,
+			updateUserState,
+		],
+	);
 
-			return response;
-		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : "Sign in failed";
-			setError(errorMessage);
-			throw handleApiError(error);
-		} finally {
-			setLoading(false);
-		}
-	}, []);
+	const verifyAccount = useCallback(
+		async (
+			data: VerifyAccountRequest,
+			_headers?: HttpHeaders,
+		): Promise<ApiResponse<VerifyAccountResponse>> => {
+			setLoading(true);
+			clearError();
 
-	const verifyAccount = useCallback(async (data: VerifyAccountRequest, headers?: HttpHeaders): Promise<ApiResponse<VerifyAccountResponse>> => {
-		setLoading(true);
-		clearError();
-		
-		try {
-			if (!apiClientRef.current) throw new Error("API client not initialized");
-			
-			const response = await apiClientRef.current.authVerify(data);
-			checkApiResponse(response);
+			try {
+				if (!apiClientRef.current)
+					throw new Error("API client not initialized");
 
-			if (response.data.accessToken) {
-				const payload = decodeJwt(response.data.accessToken);
-				if (payload?.sub && accessTokenRef.current) {
-					accessTokenRef.current.setToken(response.data.accessToken, "accessToken");
-					updateGlobalHeaders(response.data.accessToken);
-					updateUserState();
+				const response = await apiClientRef.current.authVerify(data);
+				checkApiResponse(response);
+
+				if (response.data.accessToken) {
+					const payload = decodeJwt(response.data.accessToken);
+					if (payload?.sub && accessTokenRef.current) {
+						accessTokenRef.current.setToken(
+							response.data.accessToken,
+							"accessToken",
+						);
+						updateGlobalHeaders(response.data.accessToken);
+						updateUserState();
+					}
 				}
+
+				return response;
+			} catch (error) {
+				const errorMessage =
+					error instanceof Error
+						? error.message
+						: "Account verification failed";
+				setError(errorMessage);
+				throw handleApiError(error);
+			} finally {
+				setLoading(false);
 			}
+		},
+		[
+			checkApiResponse,
+			clearError,
+			decodeJwt,
+			handleApiError,
+			setError,
+			setLoading,
+			updateGlobalHeaders,
+			updateUserState,
+		],
+	);
 
-			return response;
-		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : "Account verification failed";
-			setError(errorMessage);
-			throw handleApiError(error);
-		} finally {
-			setLoading(false);
-		}
-	}, []);
+	const logout = useCallback(
+		async (_headers?: HttpHeaders): Promise<ApiResponse<{ code: string }>> => {
+			setLoading(true);
+			clearError();
 
-	const logout = useCallback(async (headers?: HttpHeaders): Promise<ApiResponse<{ code: string }>> => {
-		setLoading(true);
-		clearError();
-		
-		try {
-			if (!apiClientRef.current) throw new Error("API client not initialized");
-			
-			const response = await authenticatedRequest((_authHeaders) =>
-				apiClientRef.current!.authSignout(),
-			);
-			
-			clearAllTokens();
-			return response;
-		} catch (error) {
-			clearAllTokens(); // Always clear tokens on logout
-			const errorMessage = error instanceof Error ? error.message : "Logout failed";
-			setError(errorMessage);
-			throw handleApiError(error);
-		} finally {
-			setLoading(false);
-		}
-	}, []);
+			try {
+				if (!apiClientRef.current)
+					throw new Error("API client not initialized");
+
+				const response = await authenticatedRequest((_authHeaders) =>
+					apiClientRef.current?.authSignout(),
+				);
+
+				clearAllTokens();
+				return response;
+			} catch (error) {
+				clearAllTokens(); // Always clear tokens on logout
+				const errorMessage =
+					error instanceof Error ? error.message : "Logout failed";
+				setError(errorMessage);
+				throw handleApiError(error);
+			} finally {
+				setLoading(false);
+			}
+		},
+		[
+			authenticatedRequest,
+			clearAllTokens,
+			clearError,
+			handleApiError,
+			setError,
+			setLoading,
+		],
+	);
 
 	const destroy = useCallback(() => {
 		if (refreshManagerRef.current) {
 			refreshManagerRef.current.destroy();
 		}
 		clearAllTokens();
-	}, []);
+	}, [clearAllTokens]);
 
 	// Additional methods (simplified for brevity - you would implement all of them similarly)
-	const sendOtp = useCallback(async (data: SendOtpRequest, headers?: HttpHeaders): Promise<ApiResponse<{ code: string }>> => {
-		setLoading(true);
-		clearError();
-		
-		try {
-			if (!apiClientRef.current) throw new Error("API client not initialized");
-			
-			const response = await apiClientRef.current.mfaOtpSend(data);
-			checkApiResponse(response);
-			
-			return response;
-		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : "Send OTP failed";
-			setError(errorMessage);
-			throw handleApiError(error);
-		} finally {
-			setLoading(false);
-		}
-	}, []);
+	const sendOtp = useCallback(
+		async (
+			data: SendOtpRequest,
+			_headers?: HttpHeaders,
+		): Promise<ApiResponse<{ code: string }>> => {
+			setLoading(true);
+			clearError();
 
-	const verifyOtp = useCallback(async (data: VerifyOtpRequest, headers?: HttpHeaders): Promise<ApiResponse<any>> => {
-		setLoading(true);
-		clearError();
-		
-		try {
-			if (!apiClientRef.current) throw new Error("API client not initialized");
-			
-			const response = await apiClientRef.current.mfaOtpVerify(data);
-			checkApiResponse(response);
+			try {
+				if (!apiClientRef.current)
+					throw new Error("API client not initialized");
 
-			if (response.data.accessToken) {
-				const payload = decodeJwt(response.data.accessToken);
-				if (payload?.sub && accessTokenRef.current) {
-					accessTokenRef.current.setToken(response.data.accessToken, "accessToken");
-					updateGlobalHeaders(response.data.accessToken);
-					updateUserState();
-				}
+				const response = await apiClientRef.current.mfaOtpSend(data);
+				checkApiResponse(response);
+
+				return response;
+			} catch (error) {
+				const errorMessage =
+					error instanceof Error ? error.message : "Send OTP failed";
+				setError(errorMessage);
+				throw handleApiError(error);
+			} finally {
+				setLoading(false);
 			}
+		},
+		[checkApiResponse, clearError, handleApiError, setError, setLoading],
+	);
 
-			return response;
-		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : "Verify OTP failed";
-			setError(errorMessage);
-			throw handleApiError(error);
-		} finally {
-			setLoading(false);
-		}
-	}, []);
+	const verifyOtp = useCallback(
+		async (
+			data: VerifyOtpRequest,
+			_headers?: HttpHeaders,
+		): Promise<ApiResponse<any>> => {
+			setLoading(true);
+			clearError();
 
-	const getProfile = useCallback(async (headers?: HttpHeaders): Promise<ApiResponse<UserMeResponse>> => {
-		setLoading(true);
-		clearError();
-		
-		try {
-			return await authenticatedRequest((_authHeaders) => {
-				if (!apiClientRef.current) throw new Error("API client not initialized");
-				return apiClientRef.current.userMe();
-			});
-		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : "Get profile failed";
-			setError(errorMessage);
-			throw handleApiError(error);
-		} finally {
-			setLoading(false);
-		}
-	}, []);
+			try {
+				if (!apiClientRef.current)
+					throw new Error("API client not initialized");
+
+				const response = await apiClientRef.current.mfaOtpVerify(data);
+				checkApiResponse(response);
+
+				if (response.data.accessToken) {
+					const payload = decodeJwt(response.data.accessToken);
+					if (payload?.sub && accessTokenRef.current) {
+						accessTokenRef.current.setToken(
+							response.data.accessToken,
+							"accessToken",
+						);
+						updateGlobalHeaders(response.data.accessToken);
+						updateUserState();
+					}
+				}
+
+				return response;
+			} catch (error) {
+				const errorMessage =
+					error instanceof Error ? error.message : "Verify OTP failed";
+				setError(errorMessage);
+				throw handleApiError(error);
+			} finally {
+				setLoading(false);
+			}
+		},
+		[
+			checkApiResponse,
+			clearError,
+			decodeJwt,
+			handleApiError,
+			setError,
+			setLoading,
+			updateGlobalHeaders,
+			updateUserState,
+		],
+	);
+
+	const getProfile = useCallback(
+		async (_headers?: HttpHeaders): Promise<ApiResponse<UserMeResponse>> => {
+			setLoading(true);
+			clearError();
+
+			try {
+				return await authenticatedRequest((_authHeaders) => {
+					if (!apiClientRef.current)
+						throw new Error("API client not initialized");
+					return apiClientRef.current.userMe();
+				});
+			} catch (error) {
+				const errorMessage =
+					error instanceof Error ? error.message : "Get profile failed";
+				setError(errorMessage);
+				throw handleApiError(error);
+			} finally {
+				setLoading(false);
+			}
+		},
+		[authenticatedRequest, clearError, handleApiError, setError, setLoading],
+	);
 
 	// Placeholder implementations for remaining methods
 	const refreshToken = useCallback(async (): Promise<string> => {
 		if (!apiClientRef.current) throw new Error("API client not initialized");
-		
+
 		const response = await apiClientRef.current.tokenRefresh();
 		if (!response.success || !response.data.accessToken) {
 			throw new Error("Invalid refresh response");
@@ -658,90 +827,155 @@ export function useNotooflyAuth(config: NotooflyAuthClientConfig): UseNotooflyAu
 		return response.data.accessToken;
 	}, []);
 
-	const requestPasswordReset = useCallback(async (data: PasswordResetRequest, headers?: HttpHeaders): Promise<ApiResponse<AuthPasswordResetRequestResponse>> => {
-		if (!apiClientRef.current) throw new Error("API client not initialized");
-		return await apiClientRef.current.authPasswordResetRequest(data);
-	}, []);
-
-	const verifyPasswordResetToken = useCallback(async (data: PasswordResetVerifyTokenRequest, headers?: HttpHeaders): Promise<ApiResponse<PasswordResetVerifyTokenResponse>> => {
-		if (!apiClientRef.current) throw new Error("API client not initialized");
-		return await apiClientRef.current.authPasswordResetVerifyToken(data);
-	}, []);
-
-	const completePasswordReset = useCallback(async (data: PasswordResetCompleteRequest, headers?: HttpHeaders): Promise<ApiResponse<{ code: string }>> => {
-		return await authenticatedRequest((_authHeaders) => {
+	const requestPasswordReset = useCallback(
+		async (
+			data: PasswordResetRequest,
+			_headers?: HttpHeaders,
+		): Promise<ApiResponse<AuthPasswordResetRequestResponse>> => {
 			if (!apiClientRef.current) throw new Error("API client not initialized");
-			return apiClientRef.current.authPasswordResetComplete(data);
-		});
-	}, []);
+			return await apiClientRef.current.authPasswordResetRequest(data);
+		},
+		[],
+	);
 
-	const changePassword = useCallback(async (data: ChangePasswordRequest, headers?: HttpHeaders): Promise<ApiResponse<UserChangePasswordResponse>> => {
-		return await authenticatedRequest((_authHeaders) => {
+	const verifyPasswordResetToken = useCallback(
+		async (
+			data: PasswordResetVerifyTokenRequest,
+			_headers?: HttpHeaders,
+		): Promise<ApiResponse<PasswordResetVerifyTokenResponse>> => {
 			if (!apiClientRef.current) throw new Error("API client not initialized");
-			return apiClientRef.current.userChangePassword(data);
-		});
-	}, []);
+			return await apiClientRef.current.authPasswordResetVerifyToken(data);
+		},
+		[],
+	);
 
-	const checkRefreshToken = useCallback(async (): Promise<ApiResponse<TokenRefreshTokenResponse>> => {
+	const completePasswordReset = useCallback(
+		async (
+			data: PasswordResetCompleteRequest,
+			_headers?: HttpHeaders,
+		): Promise<ApiResponse<{ code: string }>> => {
+			return await authenticatedRequest((_authHeaders) => {
+				if (!apiClientRef.current)
+					throw new Error("API client not initialized");
+				return apiClientRef.current.authPasswordResetComplete(data);
+			});
+		},
+		[authenticatedRequest],
+	);
+
+	const changePassword = useCallback(
+		async (
+			data: ChangePasswordRequest,
+			_headers?: HttpHeaders,
+		): Promise<ApiResponse<UserChangePasswordResponse>> => {
+			return await authenticatedRequest((_authHeaders) => {
+				if (!apiClientRef.current)
+					throw new Error("API client not initialized");
+				return apiClientRef.current.userChangePassword(data);
+			});
+		},
+		[authenticatedRequest],
+	);
+
+	const checkRefreshToken = useCallback(async (): Promise<
+		ApiResponse<TokenRefreshTokenResponse>
+	> => {
 		if (!apiClientRef.current) throw new Error("API client not initialized");
 		return await apiClientRef.current.tokenRefreshToken();
 	}, []);
 
-	const introspectToken = useCallback(async (data: TokenIntrospectionBody): Promise<ApiResponse<TokenIntrospectionResponse>> => {
-		if (!apiClientRef.current) throw new Error("API client not initialized");
-		return await apiClientRef.current.tokenIntrospection(data);
-	}, []);
+	const introspectToken = useCallback(
+		async (
+			data: TokenIntrospectionBody,
+		): Promise<ApiResponse<TokenIntrospectionResponse>> => {
+			if (!apiClientRef.current) throw new Error("API client not initialized");
+			return await apiClientRef.current.tokenIntrospection(data);
+		},
+		[],
+	);
 
-	const generateCsrfToken = useCallback(async (): Promise<ApiResponse<CsrfResponse>> => {
+	const generateCsrfToken = useCallback(async (): Promise<
+		ApiResponse<CsrfResponse>
+	> => {
 		return await authenticatedRequest((_authHeaders) => {
 			if (!apiClientRef.current) throw new Error("API client not initialized");
 			return apiClientRef.current.csrfGenerate();
 		});
-	}, []);
+	}, [authenticatedRequest]);
 
-	const getOtpStatus = useCallback(async (): Promise<ApiResponse<MfaOtpStatusResponse>> => {
+	const getOtpStatus = useCallback(async (): Promise<
+		ApiResponse<MfaOtpStatusResponse>
+	> => {
 		return await authenticatedRequest((_authHeaders) => {
 			if (!apiClientRef.current) throw new Error("API client not initialized");
 			return apiClientRef.current.mfaOtpStatus();
 		});
-	}, []);
+	}, [authenticatedRequest]);
 
-	const toggleOtp = useCallback(async (data: MfaOtpEnableBody): Promise<ApiResponse<MfaOtpEnableResponse>> => {
-		return await authenticatedRequest((_authHeaders) => {
-			if (!apiClientRef.current) throw new Error("API client not initialized");
-			return apiClientRef.current.mfaOtpEnable(data);
-		});
-	}, []);
+	const toggleOtp = useCallback(
+		async (
+			data: MfaOtpEnableBody,
+		): Promise<ApiResponse<MfaOtpEnableResponse>> => {
+			return await authenticatedRequest((_authHeaders) => {
+				if (!apiClientRef.current)
+					throw new Error("API client not initialized");
+				return apiClientRef.current.mfaOtpEnable(data);
+			});
+		},
+		[authenticatedRequest],
+	);
 
-	const verifyTotp = useCallback(async (data: MfaTotpVerifyBody): Promise<ApiResponse<MfaTotpVerifyResponse>> => {
-		return await authenticatedRequest((_authHeaders) => {
-			if (!apiClientRef.current) throw new Error("API client not initialized");
-			return apiClientRef.current.mfaTotpVerify(data);
-		});
-	}, []);
+	const verifyTotp = useCallback(
+		async (
+			data: MfaTotpVerifyBody,
+		): Promise<ApiResponse<MfaTotpVerifyResponse>> => {
+			return await authenticatedRequest((_authHeaders) => {
+				if (!apiClientRef.current)
+					throw new Error("API client not initialized");
+				return apiClientRef.current.mfaTotpVerify(data);
+			});
+		},
+		[authenticatedRequest],
+	);
 
-	const getUserDevices = useCallback(async (): Promise<ApiResponse<UserDeviceListResponse>> => {
+	const getUserDevices = useCallback(async (): Promise<
+		ApiResponse<UserDeviceListResponse>
+	> => {
 		return await authenticatedRequest((_authHeaders) => {
 			if (!apiClientRef.current) throw new Error("API client not initialized");
 			return apiClientRef.current.userDeviceList();
 		});
-	}, []);
+	}, [authenticatedRequest]);
 
-	const deleteUserDevice = useCallback(async (data: UserDeviceDeleteBody): Promise<ApiResponse<UserDeviceDeleteResponse>> => {
-		return await authenticatedRequest((_authHeaders) => {
-			if (!apiClientRef.current) throw new Error("API client not initialized");
-			return apiClientRef.current.userDeviceDelete(data);
-		});
-	}, []);
+	const deleteUserDevice = useCallback(
+		async (
+			data: UserDeviceDeleteBody,
+		): Promise<ApiResponse<UserDeviceDeleteResponse>> => {
+			return await authenticatedRequest((_authHeaders) => {
+				if (!apiClientRef.current)
+					throw new Error("API client not initialized");
+				return apiClientRef.current.userDeviceDelete(data);
+			});
+		},
+		[authenticatedRequest],
+	);
 
-	const getAuditLog = useCallback(async (query?: AdminAuditQuery): Promise<ApiResponse<AdminAuditResponse>> => {
-		return await authenticatedRequest((_authHeaders) => {
-			if (!apiClientRef.current) throw new Error("API client not initialized");
-			return apiClientRef.current.adminAudit(query);
-		});
-	}, []);
+	const getAuditLog = useCallback(
+		async (
+			query?: AdminAuditQuery,
+		): Promise<ApiResponse<AdminAuditResponse>> => {
+			return await authenticatedRequest((_authHeaders) => {
+				if (!apiClientRef.current)
+					throw new Error("API client not initialized");
+				return apiClientRef.current.adminAudit(query);
+			});
+		},
+		[authenticatedRequest],
+	);
 
-	const checkHealth = useCallback(async (): Promise<ApiResponse<HealthResponse>> => {
+	const checkHealth = useCallback(async (): Promise<
+		ApiResponse<HealthResponse>
+	> => {
 		if (!apiClientRef.current) throw new Error("API client not initialized");
 		return await apiClientRef.current.health();
 	}, []);

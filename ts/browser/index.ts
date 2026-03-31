@@ -1,18 +1,18 @@
 /**
  * @fileoverview Browser-optimized Notoofly Authentication Client
- * 
+ *
  * A browser-optimized version of the Notoofly Authentication Client designed for client-side
  * applications. This class provides the same API as the Node.js version but with browser-specific
  * optimizations and compatibility features.
- * 
+ *
  * @author Notoofly Team
  * @version 1.0.0
  * @since 1.0.0
- * 
+ *
  * @example
  * ```typescript
  * import { NotooflyAuthClient } from '@notoofly/auth-client-node/browser';
- * 
+ *
  * // Create client instance
  * const authClient = new NotooflyAuthClient({
  *   authApiUrl: 'https://api.example.com',
@@ -26,13 +26,13 @@
  *     onExpired: (sub, type) => console.log(`Access token expired for ${sub}`)
  *   }
  * });
- * 
+ *
  * // Sign in user
  * const result = await authClient.signIn({
  *   email: 'user@example.com',
  *   password: 'password123'
  * });
- * 
+ *
  * // Check authentication status
  * if (authClient.isAuthenticated()) {
  *   console.log('User is authenticated');
@@ -40,7 +40,7 @@
  *   console.log(`Current user: ${user}`);
  * }
  * ```
- * 
+ *
  * @see {@link https://docs.notoofly.com} for more detailed documentation
  */
 
@@ -54,10 +54,11 @@ import {
 	type RoutesConfig,
 } from "../core/ApiClient";
 import { RefreshManager } from "../core/RefreshManager";
-import { type DefaultTokenType, TokenStore } from "../core/TokenStore";
+import { TokenStore } from "../core/TokenStore";
 import type {
+	AdminAuditQuery,
+	AdminAuditResponse,
 	AuthPasswordResetCompleteBody,
-	AuthPasswordResetCompleteResponse,
 	AuthPasswordResetRequestBody,
 	AuthPasswordResetRequestResponse,
 	AuthPasswordResetVerifyTokenBody,
@@ -69,13 +70,12 @@ import type {
 	AuthVerifyBody,
 	AuthVerifyResponse,
 	CsrfResponse,
+	HealthResponse,
 	MfaOtpEnableBody,
 	MfaOtpEnableResponse,
 	MfaOtpSendBody,
-	MfaOtpSendResponse,
 	MfaOtpStatusResponse,
 	MfaOtpVerifyBody,
-	MfaOtpVerifyResponse,
 	MfaTotpVerifyBody,
 	MfaTotpVerifyResponse,
 	TokenIntrospectionBody,
@@ -87,9 +87,6 @@ import type {
 	UserDeviceDeleteResponse,
 	UserDeviceListResponse,
 	UserMeResponse,
-	AdminAuditQuery,
-	AdminAuditResponse,
-	HealthResponse
 } from "../types/api";
 
 // Type definitions for better compatibility
@@ -175,20 +172,11 @@ export class NotooflyAuthClient {
 	}
 
 	/**
-	 * Create browser-specific storage adapter (for future use)
-	 */
-	private createBrowserStorage(key: string): any {
-		// This would be used for custom storage implementations
-		// For now, we'll use the default in-memory storage
-		return null;
-	}
-
-	/**
 	 * Register a new user account
 	 */
 	async signUp(
 		data: SignUpRequest,
-		headers?: HttpHeaders,
+		_headers?: HttpHeaders,
 	): Promise<ApiResponse<SignUpResponse>> {
 		try {
 			const response = await this.apiClient.authSignup(data);
@@ -214,7 +202,7 @@ export class NotooflyAuthClient {
 	 */
 	async signIn(
 		data: SignInRequest,
-		headers?: HttpHeaders,
+		_headers?: HttpHeaders,
 	): Promise<ApiResponse<SignInResponse>> {
 		try {
 			const response = await this.apiClient.authSignin(data);
@@ -240,7 +228,7 @@ export class NotooflyAuthClient {
 	 */
 	async verifyAccount(
 		data: VerifyAccountRequest,
-		headers?: HttpHeaders,
+		_headers?: HttpHeaders,
 	): Promise<ApiResponse<VerifyAccountResponse>> {
 		try {
 			const response = await this.apiClient.authVerify(data);
@@ -265,7 +253,7 @@ export class NotooflyAuthClient {
 	 */
 	async sendOtp(
 		data: SendOtpRequest,
-		headers?: HttpHeaders,
+		_headers?: HttpHeaders,
 	): Promise<ApiResponse<{ code: string }>> {
 		try {
 			const response = await this.apiClient.mfaOtpSend(data);
@@ -288,7 +276,7 @@ export class NotooflyAuthClient {
 	 */
 	async verifyOtp(
 		data: VerifyOtpRequest,
-		headers?: HttpHeaders,
+		_headers?: HttpHeaders,
 	): Promise<ApiResponse<any>> {
 		try {
 			const response = await this.apiClient.mfaOtpVerify(data);
@@ -311,7 +299,9 @@ export class NotooflyAuthClient {
 	/**
 	 * Get current user profile
 	 */
-	async getProfile(headers?: HttpHeaders): Promise<ApiResponse<UserMeResponse>> {
+	async getProfile(
+		_headers?: HttpHeaders,
+	): Promise<ApiResponse<UserMeResponse>> {
 		try {
 			return await this.authenticatedRequest((_authHeaders) =>
 				this.apiClient.userMe(),
@@ -341,7 +331,7 @@ export class NotooflyAuthClient {
 	/**
 	 * Logout user
 	 */
-	async logout(headers?: HttpHeaders): Promise<ApiResponse<{ code: string }>> {
+	async logout(_headers?: HttpHeaders): Promise<ApiResponse<{ code: string }>> {
 		try {
 			const response = await this.authenticatedRequest((_authHeaders) =>
 				this.apiClient.authSignout(),
@@ -360,7 +350,7 @@ export class NotooflyAuthClient {
 	 */
 	async requestPasswordReset(
 		data: PasswordResetRequest,
-		headers?: HttpHeaders,
+		_headers?: HttpHeaders,
 	): Promise<ApiResponse<AuthPasswordResetRequestResponse>> {
 		try {
 			return await this.apiClient.authPasswordResetRequest(data);
@@ -374,7 +364,7 @@ export class NotooflyAuthClient {
 	 */
 	async verifyPasswordResetToken(
 		data: PasswordResetVerifyTokenRequest,
-		headers?: HttpHeaders,
+		_headers?: HttpHeaders,
 	): Promise<ApiResponse<PasswordResetVerifyTokenResponse>> {
 		try {
 			return await this.apiClient.authPasswordResetVerifyToken(data);
@@ -388,7 +378,7 @@ export class NotooflyAuthClient {
 	 */
 	async completePasswordReset(
 		data: PasswordResetCompleteRequest,
-		headers?: HttpHeaders,
+		_headers?: HttpHeaders,
 	): Promise<ApiResponse<{ code: string }>> {
 		try {
 			return await this.authenticatedRequest((_authHeaders) =>
@@ -404,7 +394,7 @@ export class NotooflyAuthClient {
 	 */
 	async changePassword(
 		data: ChangePasswordRequest,
-		headers?: HttpHeaders,
+		_headers?: HttpHeaders,
 	): Promise<ApiResponse<UserChangePasswordResponse>> {
 		try {
 			return await this.authenticatedRequest((_authHeaders) =>
@@ -562,7 +552,9 @@ export class NotooflyAuthClient {
 	 */
 	getCurrentUser(): string | null {
 		const users = this.accessToken.entries().map(([sub]) => sub);
-		return users.find((sub) => this.accessToken.has(sub, "accessToken")) || null;
+		return (
+			users.find((sub) => this.accessToken.has(sub, "accessToken")) || null
+		);
 	}
 
 	/**
@@ -570,7 +562,9 @@ export class NotooflyAuthClient {
 	 */
 	getAccessToken(): string | null {
 		const currentUser = this.getCurrentUser();
-		return currentUser ? this.accessToken.getToken(currentUser, "accessToken") : null;
+		return currentUser
+			? this.accessToken.getToken(currentUser, "accessToken")
+			: null;
 	}
 
 	/**
@@ -700,7 +694,7 @@ export class NotooflyAuthClient {
 			}
 
 			const payload = parts[1];
-			const decoded = this.base64Decode(payload || '');
+			const decoded = this.base64Decode(payload || "");
 			return JSON.parse(decoded);
 		} catch {
 			return null;

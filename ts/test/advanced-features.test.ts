@@ -1,17 +1,18 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
-import { NotooflyAuthClient } from "../index";
 import type { NotooflyAuthClientConfig } from "../index";
+import { NotooflyAuthClient } from "../index";
 
 // Mock fetch globally
 const mockFetch = mock(() =>
 	Promise.resolve({
 		ok: true,
-		json: () => Promise.resolve({ 
-			success: true, 
-			require: { otp: false, totp: false, user: false, guest: false },
-			message: "Success", 
-			data: {} 
-		}),
+		json: () =>
+			Promise.resolve({
+				success: true,
+				require: { otp: false, totp: false, user: false, guest: false },
+				message: "Success",
+				data: {},
+			}),
 	}),
 );
 (global.fetch as any) = mockFetch;
@@ -27,10 +28,12 @@ describe("NotooflyAuthClient - Advanced Features", () => {
 			language: "en",
 			authApiRoutes: {},
 			preAuthToken: {
-				onExpired: (sub: string, type: string) => console.log(`Pre-auth token expired for ${sub}`),
+				onExpired: (sub: string, _type: string) =>
+					console.log(`Pre-auth token expired for ${sub}`),
 			},
 			accessToken: {
-				onExpired: (sub: string, type: string) => console.log(`Access token expired for ${sub}`),
+				onExpired: (sub: string, _type: string) =>
+					console.log(`Access token expired for ${sub}`),
 			},
 		};
 		authClient = new NotooflyAuthClient(config);
@@ -121,13 +124,15 @@ describe("NotooflyAuthClient - Advanced Features", () => {
 					devices: [
 						{
 							id: "device-1",
-							userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+							userAgent:
+								"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
 							createdAt: "2024-01-01T00:00:00Z",
 							lastUsedAt: "2024-01-01T12:00:00Z",
 						},
 						{
 							id: "device-2",
-							userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)",
+							userAgent:
+								"Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)",
 							createdAt: "2024-01-02T00:00:00Z",
 							lastUsedAt: "2024-01-02T08:00:00Z",
 						},
@@ -157,7 +162,9 @@ describe("NotooflyAuthClient - Advanced Features", () => {
 				json: () => Promise.resolve(mockResponse),
 			});
 
-			const result = await authClient.deleteUserDevice({ refreshId: "device-1" });
+			const result = await authClient.deleteUserDevice({
+				refreshId: "device-1",
+			});
 			expect(result.success).toBe(true);
 		});
 	});
@@ -199,7 +206,9 @@ describe("NotooflyAuthClient - Advanced Features", () => {
 				json: () => Promise.resolve(mockResponse),
 			});
 
-			const result = await authClient.introspectToken({ token: "test-access-token" });
+			const result = await authClient.introspectToken({
+				token: "test-access-token",
+			});
 			expect(result.success).toBe(true);
 			expect(result.data.active).toBe(true);
 			expect(result.data.sub).toBe("user-123");
@@ -220,7 +229,9 @@ describe("NotooflyAuthClient - Advanced Features", () => {
 				json: () => Promise.resolve(mockResponse),
 			});
 
-			const result = await authClient.introspectToken({ token: "expired-token" });
+			const result = await authClient.introspectToken({
+				token: "expired-token",
+			});
 			expect(result.success).toBe(true);
 			expect(result.data.active).toBe(false);
 		});
@@ -384,14 +395,20 @@ describe("NotooflyAuthClient - Advanced Features", () => {
 				success: true,
 				require: { otp: false, totp: false, user: false, guest: false },
 				message: "OTP sent",
-				data: { code: "OTP.SENT", preAuthToken: "pre-auth-123", type: "preAuth" },
+				data: {
+					code: "OTP.SENT",
+					preAuthToken: "pre-auth-123",
+					type: "preAuth",
+				},
 			};
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(otpSendResponse),
 			});
 
-			const otpResult = await authClient.sendOtp({ identifier: "test@example.com" });
+			const otpResult = await authClient.sendOtp({
+				identifier: "test@example.com",
+			});
 			expect(otpResult.success).toBe(true);
 
 			// Step 2: Verify OTP
@@ -399,10 +416,10 @@ describe("NotooflyAuthClient - Advanced Features", () => {
 				success: true,
 				require: { otp: false, totp: true, user: false, guest: false },
 				message: "OTP verified, TOTP required",
-				data: { 
-					accessToken: "temp-access-token", 
+				data: {
+					accessToken: "temp-access-token",
 					type: "Bearer",
-					require: { totp: true }
+					require: { totp: true },
 				},
 			};
 			mockFetch.mockResolvedValueOnce({
@@ -467,7 +484,9 @@ describe("NotooflyAuthClient - Advanced Features", () => {
 				json: () => Promise.resolve(deleteResponse),
 			});
 
-			const deleteResult = await authClient.deleteUserDevice({ refreshId: "old-device" });
+			const deleteResult = await authClient.deleteUserDevice({
+				refreshId: "old-device",
+			});
 			expect(deleteResult.success).toBe(true);
 		});
 	});
@@ -477,7 +496,7 @@ describe("NotooflyAuthClient - Advanced Features", () => {
 			mockFetch.mockRejectedValueOnce(new Error("Request timeout"));
 
 			await expect(
-				authClient.signIn({ email: "test@example.com", password: "password" })
+				authClient.signIn({ email: "test@example.com", password: "password" }),
 			).rejects.toThrow("Request timeout");
 		});
 
@@ -488,11 +507,11 @@ describe("NotooflyAuthClient - Advanced Features", () => {
 			});
 
 			await expect(
-				authClient.signUp({ 
-					email: "test@example.com", 
-					password: "password", 
-					confirmPassword: "password" 
-				})
+				authClient.signUp({
+					email: "test@example.com",
+					password: "password",
+					confirmPassword: "password",
+				}),
 			).rejects.toThrow();
 		});
 
@@ -513,7 +532,7 @@ describe("NotooflyAuthClient - Advanced Features", () => {
 			});
 
 			await expect(
-				authClient.sendOtp({ identifier: "test@example.com" })
+				authClient.sendOtp({ identifier: "test@example.com" }),
 			).rejects.toThrow();
 		});
 	});

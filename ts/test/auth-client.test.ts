@@ -1,17 +1,18 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
-import { NotooflyAuthClient } from "../index";
 import type { NotooflyAuthClientConfig } from "../index";
+import { NotooflyAuthClient } from "../index";
 
 // Mock fetch globally
 const mockFetch = mock(() =>
 	Promise.resolve({
 		ok: true,
-		json: () => Promise.resolve({ 
-			success: true, 
-			require: { otp: false, totp: false, user: false, guest: false },
-			message: "Success", 
-			data: {} 
-		}),
+		json: () =>
+			Promise.resolve({
+				success: true,
+				require: { otp: false, totp: false, user: false, guest: false },
+				message: "Success",
+				data: {},
+			}),
 	}),
 );
 (global.fetch as any) = mockFetch;
@@ -27,10 +28,12 @@ describe("NotooflyAuthClient", () => {
 			language: "en",
 			authApiRoutes: {},
 			preAuthToken: {
-				onExpired: (sub: string, type: string) => console.log(`Pre-auth token expired for ${sub}`),
+				onExpired: (sub: string, _type: string) =>
+					console.log(`Pre-auth token expired for ${sub}`),
 			},
 			accessToken: {
-				onExpired: (sub: string, type: string) => console.log(`Access token expired for ${sub}`),
+				onExpired: (sub: string, _type: string) =>
+					console.log(`Access token expired for ${sub}`),
 			},
 		};
 		authClient = new NotooflyAuthClient(config);
@@ -40,12 +43,13 @@ describe("NotooflyAuthClient", () => {
 		mockFetch.mockImplementation(() =>
 			Promise.resolve({
 				ok: true,
-				json: () => Promise.resolve({ 
-					success: true, 
-					require: { otp: false, totp: false, user: false, guest: false },
-					message: "Success", 
-					data: {} 
-				}),
+				json: () =>
+					Promise.resolve({
+						success: true,
+						require: { otp: false, totp: false, user: false, guest: false },
+						message: "Success",
+						data: {},
+					}),
 			}),
 		);
 	});
@@ -202,7 +206,11 @@ describe("NotooflyAuthClient", () => {
 				success: true,
 				require: { otp: false, totp: false, user: false, guest: false },
 				message: "OTP sent successfully",
-				data: { code: "OTP.CORE.SENT", preAuthToken: "pre-auth-token", type: "preAuth" },
+				data: {
+					code: "OTP.CORE.SENT",
+					preAuthToken: "pre-auth-token",
+					type: "preAuth",
+				},
 			};
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
@@ -459,7 +467,9 @@ describe("NotooflyAuthClient", () => {
 				json: () => Promise.resolve(mockResponse),
 			});
 
-			const result = await authClient.deleteUserDevice({ refreshId: "device-1" });
+			const result = await authClient.deleteUserDevice({
+				refreshId: "device-1",
+			});
 
 			expect(result.success).toBe(true);
 		});
@@ -639,12 +649,13 @@ describe("NotooflyAuthClient", () => {
 				})
 				.mockResolvedValueOnce({
 					ok: true,
-					json: () => Promise.resolve({
-						success: true,
-						require: { otp: false, totp: false, user: false, guest: false },
-						message: "Token refreshed",
-						data: { accessToken: "new-token", type: "Bearer" },
-					}),
+					json: () =>
+						Promise.resolve({
+							success: true,
+							require: { otp: false, totp: false, user: false, guest: false },
+							message: "Token refreshed",
+							data: { accessToken: "new-token", type: "Bearer" },
+						}),
 				})
 				.mockResolvedValueOnce({
 					ok: true,

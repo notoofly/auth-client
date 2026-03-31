@@ -1,21 +1,21 @@
 {
-  "name": "notoofly-auth-client-tests",
-  "version": "1.0.0",
-  "description": "Test suite for NotooflyAuthClient",
-  "type": "module",
-  "scripts": {
-    "test": "bun test",
-    "test:watch": "bun test --watch",
-    "test:coverage": "bun test --coverage",
-    "test:auth-client": "bun test test/auth-client.test.ts",
-    "test:advanced": "bun test test/advanced-features.test.ts",
-    "test:all": "bun test test/*.test.ts"
-  },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "latest"
-  }
+	"name": "notoofly-auth-client-tests",
+	"version": "1.0.0",
+	"description": "Test suite for NotooflyAuthClient",
+	"type": "module",
+	"scripts": {
+		"test": "bun test",
+		"test:watch": "bun test --watch",
+		"test:coverage": "bun test --coverage",
+		"test:auth-client": "bun test test/auth-client.test.ts",
+		"test:advanced": "bun test test/advanced-features.test.ts",
+		"test:all": "bun test test/*.test.ts"
+	},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "latest"
+	}
 }
