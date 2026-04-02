@@ -281,7 +281,7 @@ export function useNotooflyAuth(
 		};
 	}, [
 		// Check initial authentication state
-		checkAuthState,
+		// ERROR: checkAuthState,
 		config.accessToken.onExpired,
 		config.authApiHeaders,
 		config.authApiRoutes,
@@ -289,7 +289,7 @@ export function useNotooflyAuth(
 		config.i18n,
 		config.language,
 		config.preAuthToken.onExpired,
-		destroy,
+		// ERROR: destroy,
 	]);
 
 	const setLoading = (loading: boolean) => {
@@ -682,7 +682,7 @@ export function useNotooflyAuth(
 					throw new Error("API client not initialized");
 
 				const response = await authenticatedRequest((_authHeaders) =>
-					apiClientRef.current?.authSignout(),
+					apiClientRef.current?.authSignout()!,
 				);
 
 				clearAllTokens();
