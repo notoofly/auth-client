@@ -380,7 +380,7 @@ describe("Real API Integration Tests", () => {
 				authApiUrl: "https://invalid-api-endpoint.com",
 				language: "en",
 			});
-			console.log(await invalidClient.checkHealth())
+			console.log(await invalidClient.checkHealth());
 
 			const response = await invalidClient.checkHealth();
 

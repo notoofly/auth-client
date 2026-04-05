@@ -322,7 +322,7 @@ export class ApiClient<L extends Language = "en"> {
 					},
 				};
 			} else {
-				raw = await res.json() as RawPayload<T>;
+				raw = (await res.json()) as RawPayload<T>;
 			}
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : "SYSTEM.CORE.ERROR";

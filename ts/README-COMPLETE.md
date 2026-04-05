@@ -45,13 +45,13 @@ Notoofly Authentication Client is a comprehensive TypeScript library that provid
 
 ```bash
 # Install the main package (includes all versions)
-npm install @notoofly/auth-client-node
+npm install @notoofly/auth-client
 
 # or using yarn
-yarn add @notoofly/auth-client-node
+yarn add @notoofly/auth-client
 
 # or using pnpm
-pnpm add @notoofly/auth-client-node
+pnpm add @notoofly/auth-client
 ```
 
 ---
@@ -61,7 +61,7 @@ pnpm add @notoofly/auth-client-node
 ### Node.js Version
 
 ```typescript
-import { NotooflyAuthClient } from '@notoofly/auth-client-node';
+import { NotooflyAuthClient } from '@notoofly/auth-client';
 
 const authClient = new NotooflyAuthClient({
   authApiUrl: 'https://api.example.com',
@@ -92,7 +92,7 @@ if (result.success) {
 
 ```tsx
 import React from 'react';
-import { useNotooflyAuth } from '@notoofly/auth-client-node/react';
+import { useNotooflyAuth } from '@notoofly/auth-client/react';
 
 function AuthComponent() {
   const {
@@ -150,7 +150,7 @@ function AuthComponent() {
 <html>
 <head>
     <script type="module">
-        import { NotooflyAuthClient } from '@notoofly/auth-client-node/browser';
+        import { NotooflyAuthClient } from '@notoofly/auth-client/browser';
         
         const authClient = new NotooflyAuthClient({
             authApiUrl: 'https://api.example.com',
@@ -187,7 +187,7 @@ function AuthComponent() {
 The main authentication client class for Node.js applications.
 
 ```typescript
-import { NotooflyAuthClient } from '@notoofly/auth-client-node';
+import { NotooflyAuthClient } from '@notoofly/auth-client';
 ```
 
 #### 🔧 Constructor
@@ -292,7 +292,7 @@ const authClient = new NotooflyAuthClient({
 React Hook that provides authentication state and actions.
 
 ```typescript
-import { useNotooflyAuth } from '@notoofly/auth-client-node/react';
+import { useNotooflyAuth } from '@notoofly/auth-client/react';
 ```
 
 #### 📊 State Properties
@@ -372,7 +372,7 @@ function AuthComponent() {
 Browser-optimized authentication client with the same API as Node.js version.
 
 ```typescript
-import { NotooflyAuthClient } from '@notoofly/auth-client-node/browser';
+import { NotooflyAuthClient } from '@notoofly/auth-client/browser';
 ```
 
 The API is identical to the Node.js version. See the [Node.js Version](#nodejs-version) section for complete API reference.

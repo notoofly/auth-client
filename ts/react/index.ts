@@ -12,7 +12,7 @@
  * @example
  * ```tsx
  * import React from 'react';
- * import { useNotooflyAuth } from '@notoofly/auth-client-node/react';
+ * import { useNotooflyAuth } from '@notoofly/auth-client/react';
  *
  * function LoginComponent() {
  *   const {
@@ -65,17 +65,16 @@
  */
 
 import type { JWTPayload } from "jose";
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-	ApiClient,
-	type ApiResponse,
-	type DeepPartialRoutes,
-	type I18nResources,
-	type Language,
-	type RoutesConfig,
-} from "../core/ApiClient";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { ApiClient, type ApiResponse } from "../core/ApiClient";
 import { RefreshManager } from "../core/RefreshManager";
-import { TokenStore } from "../core/TokenStore";
+import { TokenStore, type DefaultTokenType } from "../core/TokenStore";
+import type {
+	I18nResources,
+	Language,
+	DeepPartialRoutes,
+	RoutesConfig,
+} from "../core/ApiClient";
 import type {
 	AdminAuditQuery,
 	AdminAuditResponse,

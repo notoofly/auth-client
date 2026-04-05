@@ -1,167 +1,240 @@
 import type { ApiClient } from "./ApiClient";
-import type { TokenStore } from "./TokenStore";
+import type { DefaultTokenType, TokenStore } from "./TokenStore";
+import type { TokenRefreshResponse } from "../types/api";
+
+// ─── Types ────────────────────────────────────────────────────────────
+
+export interface RefreshManagerOptions {
+	/**
+	 * Interval untuk cek token expiration (dalam milidetik)
+	 * Default: 30000 (30 detik)
+	 */
+	checkInterval?: number;
+	
+	/**
+	 * Buffer time sebelum token expired untuk refresh (dalam milidetik)
+	 * Default: 300000 (5 menit)
+	 */
+	refreshBuffer?: number;
+	
+	/**
+	 * Maximum retry attempts untuk refresh
+	 * Default: 3
+	 */
+	maxRetries?: number;
+}
+
+// ─── Class ────────────────────────────────────────────────────────────
 
 /**
- * Manages concurrent token refresh requests
- * Ensures only one refresh request runs at a time
+ * RefreshManager — mengelola token refresh otomatis
+ *
+ * Fitur:
+ * • Auto-refresh token sebelum expired
+ * • Retry logic dengan exponential backoff
+ * • Race condition prevention
+ * • Event-driven architecture
+ *
+ * @template L — Type bahasa yang tersedia
+ *
+ * @example
+ * ```typescript
+ * const refreshManager = RefreshManager.getInstance(apiClient, tokenStore);
+ * 
+ * // Start auto-refresh
+ * refreshManager.start();
+ * 
+ * // Stop auto-refresh
+ * refreshManager.stop();
+ * ```
  */
 export class RefreshManager {
-	private static instance: RefreshManager;
+	private static instance: RefreshManager | null = null;
+	private readonly apiClient: ApiClient;
+	private readonly tokenStore: TokenStore<DefaultTokenType>;
+	private readonly options: Required<RefreshManagerOptions>;
+	
+	private intervalId: NodeJS.Timeout | null = null;
 	private isRefreshing = false;
-	private refreshQueue: Array<RefreshRequest> = [];
-	private apiClient: ApiClient;
-	private tokenStore: TokenStore;
+	private refreshPromise: Promise<string> | null = null;
 
-	private constructor(apiClient: ApiClient, tokenStore: TokenStore) {
+	private constructor(
+		apiClient: ApiClient,
+		tokenStore: TokenStore<DefaultTokenType>,
+		options: RefreshManagerOptions = {}
+	) {
 		this.apiClient = apiClient;
 		this.tokenStore = tokenStore;
+		this.options = {
+			checkInterval: 30000, // 30 detik
+			refreshBuffer: 300000, // 5 menit
+			maxRetries: 3,
+			...options,
+		};
 	}
 
 	/**
-	 * Get singleton instance
+	 * Singleton pattern untuk memastikan hanya satu instance
 	 */
 	static getInstance(
 		apiClient: ApiClient,
-		tokenStore: TokenStore,
+		tokenStore: TokenStore<DefaultTokenType>,
+		options?: RefreshManagerOptions
 	): RefreshManager {
 		if (!RefreshManager.instance) {
-			RefreshManager.instance = new RefreshManager(apiClient, tokenStore);
+			RefreshManager.instance = new RefreshManager(apiClient, tokenStore, options);
 		}
 		return RefreshManager.instance;
 	}
 
 	/**
-	 * Refresh access token with queue management
+	 * Memulai auto-refresh monitoring
 	 */
-	async refreshToken(): Promise<string> {
-		return new Promise((resolve, reject) => {
-			const request: RefreshRequest = {
-				resolve,
-				reject,
-				timestamp: Date.now(),
-			};
+	start(): void {
+		if (this.intervalId) return;
 
-			// Add to queue
-			this.refreshQueue.push(request);
-
-			// Start refresh if not already in progress
-			if (!this.isRefreshing) {
-				this.processRefreshQueue();
-			}
-		});
+		this.intervalId = setInterval(() => {
+			this.checkAndRefreshTokens();
+		}, this.options.checkInterval);
 	}
 
 	/**
-	 * Process the refresh queue
+	 * Menghentikan auto-refresh monitoring
 	 */
-	private async processRefreshQueue(): Promise<void> {
-		if (this.isRefreshing || this.refreshQueue.length === 0) {
-			return;
+	stop(): void {
+		if (this.intervalId) {
+			clearInterval(this.intervalId);
+			this.intervalId = null;
+		}
+	}
+
+	/**
+	 * Manual refresh token
+	 */
+	async refresh(): Promise<string> {
+		if (this.isRefreshing) {
+			return this.refreshPromise || Promise.reject(new Error("Refresh already in progress"));
 		}
 
 		this.isRefreshing = true;
-		const currentBatch = [...this.refreshQueue];
-		this.refreshQueue = [];
+		this.refreshPromise = this.performRefresh();
 
 		try {
-			// Perform token refresh
-			const newToken = await this.performRefresh();
-
-			// Resolve all waiting requests
-			currentBatch.forEach((request) => {
-				request.resolve(newToken);
-			});
-		} catch (error) {
-			// Reject all waiting requests
-			currentBatch.forEach((request) => {
-				request.reject(error as Error);
-			});
+			const result = await this.refreshPromise;
+			return result;
 		} finally {
 			this.isRefreshing = false;
-
-			// Process next batch if any
-			if (this.refreshQueue.length > 0) {
-				setTimeout(() => this.processRefreshQueue(), 0);
-			}
+			this.refreshPromise = null;
 		}
 	}
 
 	/**
-	 * Perform the actual token refresh
+	 * Perform the actual refresh
 	 */
 	private async performRefresh(): Promise<string> {
-		try {
-			// Call the refresh endpoint
-			const response = await this.apiClient.postV1TokenRefresh();
-
-			if (!response.success || !response.data.accessToken) {
-				throw new Error("Invalid refresh response");
+		const entries = this.tokenStore.entries();
+		
+		for (const [sub, type, entry] of entries) {
+			if (this.shouldRefresh(entry.payload)) {
+				await this.refreshToken(sub, type as DefaultTokenType);
+				return this.tokenStore.getToken(sub, "accessToken") || "";
 			}
+		}
+		
+		throw new Error("No tokens to refresh");
+	}
 
-			const newAccessToken = response.data.accessToken;
-
-			// Store the new token
-			const payload = this.decodeJwt(newAccessToken);
-			if (payload?.sub) {
-				this.tokenStore.setToken(payload.sub, "accessToken", newAccessToken);
+	/**
+	 * Cek semua token dan refresh yang perlu
+	 */
+	private async checkAndRefreshTokens(): Promise<void> {
+		const entries = this.tokenStore.entries();
+		
+		for (const [sub, type, entry] of entries) {
+			if (this.shouldRefresh(entry.payload)) {
+				try {
+					await this.refreshToken(sub, type as DefaultTokenType);
+				} catch (error) {
+					console.error(`Failed to refresh token for ${sub}:${type}:`, error);
+				}
 			}
-
-			// Update global headers for subsequent requests
-			this.updateGlobalHeaders(newAccessToken);
-
-			return newAccessToken;
-		} catch (error) {
-			// Handle refresh failure
-			this.handleRefreshFailure(error as ApiError);
-			throw error;
 		}
 	}
 
 	/**
-	 * Decode JWT token
+	 * Cek apakah token perlu di-refresh
 	 */
-	private decodeJwt(token: string): { sub: string; exp: number } | null {
+	private shouldRefresh(payload: any): boolean {
+		if (!payload.exp) return false;
+
+		const now = Math.floor(Date.now() / 1000);
+		const refreshTime = payload.exp - (this.options.refreshBuffer / 1000);
+		
+		return now >= refreshTime;
+	}
+
+	/**
+	 * Refresh token spesifik
+	 */
+	private async refreshToken(sub: string, type: DefaultTokenType): Promise<void> {
+		if (type !== "accessToken") return;
+
+		let retryCount = 0;
+		let lastError: Error | null = null;
+
+		while (retryCount < this.options.maxRetries) {
+			try {
+				const response = await this.apiClient.tokenRefresh();
+				
+				if (response.success && response.data.accessToken) {
+					// Update token di store
+					const payload = this.decodeJWT(response.data.accessToken);
+					if (payload?.sub) {
+						this.tokenStore.setToken(response.data.accessToken, "accessToken");
+					}
+					return;
+				}
+
+				const errorMessage = (response as any).error?.message || "Refresh failed";
+				throw new Error(errorMessage);
+			} catch (error) {
+				lastError = error as Error;
+				retryCount++;
+
+				// Exponential backoff
+				if (retryCount < this.options.maxRetries) {
+					const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+					await new Promise(resolve => setTimeout(resolve, delay));
+				}
+			}
+		}
+
+		// Jika semua retry gagal, panggil handle expired
+		if (lastError) {
+			// Trigger token expiration callback
+			if (this.tokenStore.options.onExpired) {
+				this.tokenStore.options.onExpired(sub, type);
+			}
+		}
+
+		throw lastError || new Error("Refresh failed after maximum retries");
+	}
+
+	/**
+	 * Decode JWT helper
+	 */
+	private decodeJWT(token: string): any {
 		try {
-			const parts = token.split(".");
+			const parts = token.split('.');
 			if (parts.length !== 3 || !parts[1]) {
 				return null;
 			}
 
 			const payload = parts[1];
-			const decoded = this.base64Decode(payload);
-			const parsed = JSON.parse(decoded) as any;
-
-			if (parsed.sub && parsed.exp) {
-				return { sub: parsed.sub, exp: parsed.exp };
-			}
-
-			return null;
+			const decoded = this.base64UrlDecode(payload);
+			return JSON.parse(decoded);
 		} catch {
 			return null;
-		}
-	}
-
-	/**
-	 * Base64 decode helper
-	 */
-	private base64Decode(str: string): string {
-		try {
-			// Try built-in atob first (browser)
-			if (typeof globalThis !== "undefined" && (globalThis as any).atob) {
-				return (globalThis as any).atob(this.base64UrlDecode(str));
-			}
-
-			// Fallback for Node.js environments
-			const binaryString = this.base64UrlDecode(str);
-			const bytes = new Uint8Array(binaryString.length);
-			for (let i = 0; i < binaryString.length; i++) {
-				bytes[i] = binaryString.charCodeAt(i);
-			}
-
-			// Convert bytes to string
-			return new TextDecoder().decode(bytes);
-		} catch {
-			throw new Error("Failed to decode base64 string");
 		}
 	}
 
@@ -170,76 +243,53 @@ export class RefreshManager {
 	 */
 	private base64UrlDecode(str: string): string {
 		str += "=".repeat((4 - (str.length % 4)) % 4);
-		return str.replace(/-/g, "+").replace(/_/g, "/");
-	}
-
-	/**
-	 * Update global headers for authenticated requests
-	 */
-	private updateGlobalHeaders(accessToken: string): void {
-		if (typeof globalThis !== "undefined") {
-			(globalThis as any).__authHeaders = {
-				...(globalThis as any).__authHeaders,
-				authorization: `Bearer ${accessToken}`,
-			};
+		str = str.replace(/-/g, '+').replace(/_/g, '/');
+		
+		// Browser compatibility
+		if (typeof globalThis !== 'undefined' && (globalThis as any).atob) {
+			return (globalThis as any).atob(str);
 		}
+		
+		// Node.js fallback
+		return Buffer.from(str, 'base64').toString('utf-8');
 	}
 
 	/**
-	 * Handle refresh failure by clearing tokens
+	 * Dapatkan status refresh manager
 	 */
-	private handleRefreshFailure(_error: ApiError): void {
-		// Clear all stored tokens on refresh failure
-		const users = this.tokenStore.getUsers();
-		users.forEach((sub: string) => {
-			this.tokenStore.clearUserTokens(sub);
-		});
+	getStatus(): {
+		isRunning: boolean;
+		isRefreshing: boolean;
+		tokenCount: number;
+	} {
+		return {
+			isRunning: this.intervalId !== null,
+			isRefreshing: this.isRefreshing,
+			tokenCount: this.tokenStore.size,
+		};
+	}
 
-		// Clear global headers
-		if (typeof globalThis !== "undefined") {
-			delete (globalThis as any).__authHeaders;
+	/**
+	 * Force refresh semua token
+	 */
+	async forceRefreshAll(): Promise<void> {
+		const entries = this.tokenStore.entries();
+		const refreshPromises: Promise<void>[] = [];
+
+		for (const [sub, type] of entries) {
+			if (type === "accessToken") {
+				refreshPromises.push(this.refreshToken(sub, type));
+			}
 		}
-	}
 
-	/**
-	 * Check if currently refreshing
-	 */
-	get isCurrentlyRefreshing(): boolean {
-		return this.isRefreshing;
-	}
-
-	/**
-	 * Get queue size
-	 */
-	get queueSize(): number {
-		return this.refreshQueue.length;
-	}
-
-	/**
-	 * Clear the refresh queue (useful for cleanup)
-	 */
-	clearQueue(): void {
-		const queuedRequests = [...this.refreshQueue];
-		this.refreshQueue = [];
-
-		// Reject all queued requests
-		queuedRequests.forEach((request) => {
-			request.reject(new Error("Refresh queue cleared"));
-		});
+		await Promise.allSettled(refreshPromises);
 	}
 
 	/**
 	 * Cleanup resources
 	 */
 	destroy(): void {
-		this.clearQueue();
-		this.isRefreshing = false;
+		this.stop();
+		RefreshManager.instance = null;
 	}
-}
-
-// Internal types
-interface RefreshRequest {
-	resolve: (token: string) => void;
-	reject: (error: Error) => void;
-	timestamp: number;
 }

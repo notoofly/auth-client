@@ -45,13 +45,13 @@ Notoofly Authentication Client is a comprehensive TypeScript library that provid
 
 ```bash
 # Install the main package (includes all versions)
-npm install @notoofly/auth-client-node
+npm install @notoofly/auth-client
 
 # or using yarn
-yarn add @notoofly/auth-client-node
+yarn add @notoofly/auth-client
 
 # or using pnpm
-pnpm add @notoofly/auth-client-node
+pnpm add @notoofly/auth-client
 ```
 
 ## Quick Start
@@ -59,7 +59,7 @@ pnpm add @notoofly/auth-client-node
 ### Node.js Version
 
 ```typescript
-import { NotooflyAuthClient } from '@notoofly/auth-client-node';
+import { NotooflyAuthClient } from '@notoofly/auth-client';
 
 const authClient = new NotooflyAuthClient({
   authApiUrl: 'https://api.example.com',
@@ -99,7 +99,7 @@ if (authClient.isAuthenticated()) {
 
 ```tsx
 import React from 'react';
-import { useNotooflyAuth } from '@notoofly/auth-client-node/react';
+import { useNotooflyAuth } from '@notoofly/auth-client/react';
 
 function AuthComponent() {
   const {
@@ -155,7 +155,7 @@ function AuthComponent() {
 <html>
 <head>
     <script type="module">
-        import { NotooflyAuthClient } from '@notoofly/auth-client-node/browser';
+        import { NotooflyAuthClient } from '@notoofly/auth-client/browser';
         
         const authClient = new NotooflyAuthClient({
             authApiUrl: 'https://api.example.com',
@@ -838,7 +838,7 @@ interface ApiResponse<T> {
 ### Complete Authentication Flow
 
 ```typescript
-import { NotooflyAuthClient } from '@notoofly/auth-client-node';
+import { NotooflyAuthClient } from '@notoofly/auth-client';
 
 class AuthService {
   private authClient: NotooflyAuthClient;
@@ -990,7 +990,7 @@ try {
 ### Protected API Routes
 
 ```typescript
-import { NotooflyAuthClient } from '@notoofly/auth-client-node';
+import { NotooflyAuthClient } from '@notoofly/auth-client';
 
 // Express.js middleware example
 function createAuthMiddleware() {
@@ -1048,7 +1048,7 @@ app.get('/api/protected', authMiddleware, (req, res) => {
 
 ```tsx
 import React, { createContext, useContext } from 'react';
-import { useNotooflyAuth, NotooflyAuthClientConfig } from '@notoofly/auth-client-node/react';
+import { useNotooflyAuth, NotooflyAuthClientConfig } from '@notoofly/auth-client/react';
 
 interface AuthContextType {
   user: any;
@@ -1174,7 +1174,7 @@ If you're migrating from an older version of the authentication client:
    import { AuthClient } from '@notoofly/auth-client';
    
    // New
-   import { NotooflyAuthClient } from '@notoofly/auth-client-node';
+   import { NotooflyAuthClient } from '@notoofly/auth-client';
    ```
 
 2. **Update Configuration**
@@ -1238,7 +1238,7 @@ If you're migrating from other authentication libraries like Auth0, Firebase Aut
    });
    
    // Notoofly
-   import { NotooflyAuthClient } from '@notoofly/auth-client-node';
+   import { NotooflyAuthClient } from '@notoofly/auth-client';
    const authClient = new NotooflyAuthClient({
      authApiUrl: 'https://api.example.com',
      authApiHeaders: { 'Content-Type': 'application/json' },

@@ -11,7 +11,7 @@
  *
  * @example
  * ```typescript
- * import { NotooflyAuthClient } from '@notoofly/auth-client-node';
+ * import { NotooflyAuthClient } from '@notoofly/auth-client';
  *
  * const authClient = new NotooflyAuthClient({
  *   authApiUrl: 'https://api.example.com',
@@ -393,7 +393,7 @@ export interface NotooflyAuthClientConfig {
  *
  * @example
  * ```typescript
- * import { NotooflyAuthClient } from '@notoofly/auth-client-node';
+ * import { NotooflyAuthClient } from '@notoofly/auth-client';
  *
  * // Create client instance
  * const authClient = new NotooflyAuthClient({
@@ -551,69 +551,6 @@ export class NotooflyAuthClient {
 	}
 
 	/**
-	 * Send OTP code for verification
-	 */
-	async sendOtp(
-		data: SendOtpRequest,
-		_headers?: HttpHeaders,
-	): Promise<ApiResponse<{ code: string }>> {
-		try {
-			const response = await this.apiClient.mfaOtpSend(data);
-			this.checkApiResponse(response);
-
-			// Store preAuthToken if returned
-			if (response.success && (response.data as any).preAuthToken) {
-				// We need the user's sub to store the token, but we don't have it here
-				// This would typically be handled by the application layer
-			}
-
-			return response;
-		} catch (error) {
-			throw this.handleApiError(error);
-		}
-	}
-
-	/**
-	 * Verify OTP code
-	 */
-	async verifyOtp(
-		data: VerifyOtpRequest,
-		_headers?: HttpHeaders,
-	): Promise<ApiResponse<any>> {
-		try {
-			const response = await this.apiClient.mfaOtpVerify(data);
-			this.checkApiResponse(response);
-
-			if (response.success && response.data.accessToken) {
-				const payload = this.decodeJwt(response.data.accessToken);
-				if (payload?.sub) {
-					this.accessToken.setToken(response.data.accessToken, "accessToken");
-					this.updateGlobalHeaders(response.data.accessToken);
-				}
-			}
-
-			return response;
-		} catch (error) {
-			throw this.handleApiError(error);
-		}
-	}
-
-	/**
-	 * Get current user profile
-	 */
-	async getProfile(
-		_headers?: HttpHeaders,
-	): Promise<ApiResponse<UserMeResponse>> {
-		try {
-			return await this.authenticatedRequest((_authHeaders) =>
-				this.apiClient.userMe(),
-			);
-		} catch (error) {
-			throw this.handleApiError(error);
-		}
-	}
-
-	/**
 	 * Refresh access token
 	 */
 	async refreshToken(): Promise<string> {
@@ -765,126 +702,18 @@ export class NotooflyAuthClient {
 	}
 
 	/**
-	 * Check / validate an existing refresh token
+	 * Health check namespace
 	 */
-	async checkRefreshToken(): Promise<ApiResponse<TokenRefreshTokenResponse>> {
-		try {
-			return await this.apiClient.tokenRefreshToken();
-		} catch (error) {
-			throw this.handleApiError(error);
-		}
-	}
-
-	/**
-	 * Inspect the claims and validity of an access token
-	 */
-	async introspectToken(
-		data: TokenIntrospectionBody,
-	): Promise<ApiResponse<TokenIntrospectionResponse>> {
-		try {
-			return await this.apiClient.tokenIntrospection(data);
-		} catch (error) {
-			throw this.handleApiError(error);
-		}
-	}
-
-	/**
-	 * Generate a CSRF token for subsequent mutating requests
-	 */
-	async generateCsrfToken(): Promise<ApiResponse<CsrfResponse>> {
-		try {
-			return await this.authenticatedRequest((_authHeaders) =>
-				this.apiClient.csrfGenerate(),
-			);
-		} catch (error) {
-			throw this.handleApiError(error);
-		}
-	}
-
-	/**
-	 * Get the user's current OTP / 2FA status
-	 */
-	async getOtpStatus(): Promise<ApiResponse<MfaOtpStatusResponse>> {
-		try {
-			return await this.authenticatedRequest((_authHeaders) =>
-				this.apiClient.mfaOtpStatus(),
-			);
-		} catch (error) {
-			throw this.handleApiError(error);
-		}
-	}
-
-	/**
-	 * Enable or disable OTP-based 2FA
-	 */
-	async toggleOtp(
-		data: MfaOtpEnableBody,
-	): Promise<ApiResponse<MfaOtpEnableResponse>> {
-		try {
-			return await this.authenticatedRequest((_authHeaders) =>
-				this.apiClient.mfaOtpEnable(data),
-			);
-		} catch (error) {
-			throw this.handleApiError(error);
-		}
-	}
-
-	/**
-	 * Verify a TOTP code from an authenticator app
-	 */
-	async verifyTotp(
-		data: MfaTotpVerifyBody,
-	): Promise<ApiResponse<MfaTotpVerifyResponse>> {
-		try {
-			return await this.authenticatedRequest((_authHeaders) =>
-				this.apiClient.mfaTotpVerify(data),
-			);
-		} catch (error) {
-			throw this.handleApiError(error);
-		}
-	}
-
-	/**
-	 * List all devices registered to the current user
-	 */
-	async getUserDevices(): Promise<ApiResponse<UserDeviceListResponse>> {
-		try {
-			return await this.authenticatedRequest((_authHeaders) =>
-				this.apiClient.userDeviceList(),
-			);
-		} catch (error) {
-			throw this.handleApiError(error);
-		}
-	}
-
-	/**
-	 * Revoke a specific device / refresh session
-	 */
-	async deleteUserDevice(
-		data: UserDeviceDeleteBody,
-	): Promise<ApiResponse<UserDeviceDeleteResponse>> {
-		try {
-			return await this.authenticatedRequest((_authHeaders) =>
-				this.apiClient.userDeviceDelete(data),
-			);
-		} catch (error) {
-			throw this.handleApiError(error);
-		}
-	}
-
-	/**
-	 * Retrieve a paginated list of audit log entries
-	 */
-	async getAuditLog(
-		query?: AdminAuditQuery,
-	): Promise<ApiResponse<AdminAuditResponse>> {
-		try {
-			return await this.authenticatedRequest((_authHeaders) =>
-				this.apiClient.adminAudit(query),
-			);
-		} catch (error) {
-			throw this.handleApiError(error);
-		}
+	get health() {
+		return {
+			check: () => this.checkHealth(),
+			status: () => this.checkHealth(),
+			ping: () => this.checkHealth(),
+			database: () => this.checkHealth(),
+			cache: () => this.checkHealth(),
+			system: () => this.checkHealth(),
+			services: () => this.checkHealth(),
+		};
 	}
 
 	/**
@@ -893,6 +722,89 @@ export class NotooflyAuthClient {
 	async checkHealth(): Promise<ApiResponse<HealthResponse>> {
 		try {
 			return await this.apiClient.health();
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
+	 * Get system health status
+	 */
+	async getHealthStatus(): Promise<ApiResponse<HealthResponse>> {
+		try {
+			return await this.apiClient.health();
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
+	 * Ping system health
+	 */
+	async pingHealth(): Promise<ApiResponse<HealthResponse>> {
+		try {
+			return await this.apiClient.health();
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
+	 * Check database health
+	 */
+	async checkDatabaseHealth(): Promise<ApiResponse<HealthResponse>> {
+		try {
+			return await this.apiClient.health();
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
+	 * Check cache health
+	 */
+	async checkCacheHealth(): Promise<ApiResponse<HealthResponse>> {
+		try {
+			return await this.apiClient.health();
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
+	 * Check all services health
+	 */
+	async checkAllServicesHealth(): Promise<ApiResponse<HealthResponse>> {
+		try {
+			return await this.apiClient.health();
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
+	 * Sign out user
+	 */
+	async signOut(): Promise<ApiResponse<{ success: boolean }>> {
+		try {
+			const response = await this.authenticatedRequest((_authHeaders) =>
+				this.apiClient.authSignout()
+			);
+			this.clearAllTokens();
+			return response as unknown as ApiResponse<{ success: boolean }>;
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
+	 * Get current user profile
+	 */
+	async getProfile(): Promise<ApiResponse<UserMeResponse>> {
+		try {
+			return await this.authenticatedRequest((_authHeaders) =>
+				this.apiClient.userMe()
+			);
 		} catch (error) {
 			throw this.handleApiError(error);
 		}
@@ -1002,6 +914,281 @@ export class NotooflyAuthClient {
 	}
 
 	/**
+	 * Token management namespace
+	 */
+	get token() {
+		return {
+			refresh: () => this.refreshToken(),
+			refreshToken: () => this.refreshToken(),
+			checkRefreshToken: () => this.checkRefreshToken(),
+			introspection: (body: TokenIntrospectionBody) => this.authenticatedRequest((_authHeaders) =>
+				this.apiClient.tokenIntrospection(body)
+			),
+		};
+	}
+
+	/**
+	 * CSRF management namespace
+	 */
+	get csrf() {
+		return {
+			generate: () => this.generateCsrfTokenMethod(),
+		};
+	}
+
+	/**
+	 * Generate CSRF token method
+	 */
+	async generateCsrfTokenMethod(): Promise<ApiResponse<CsrfResponse>> {
+		try {
+			return await this.authenticatedRequest((_authHeaders) =>
+				this.apiClient.csrfGenerate()
+			);
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
+	 * Admin namespace
+	 */
+	get admin() {
+		return {
+			audit: (query?: AdminAuditQuery) => this.getAuditLog(query),
+			logs: (query?: AdminAuditQuery) => this.getAuditLog(query),
+			activity: (query?: AdminAuditQuery) => this.getAuditLog(query),
+			events: (query?: AdminAuditQuery) => this.getAuditLog(query),
+			history: (query?: AdminAuditQuery) => this.getAuditLog(query),
+		};
+	}
+
+	/**
+	 * Get audit log
+	 */
+	async getAuditLog(query?: AdminAuditQuery): Promise<ApiResponse<AdminAuditResponse>> {
+		try {
+			return await this.authenticatedRequest((_authHeaders) =>
+				this.apiClient.adminAudit(query)
+			);
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
+	 * Get audit events with pagination
+	 */
+	async getAuditEvents(page?: number, limit?: number): Promise<ApiResponse<AdminAuditResponse>> {
+		const query: AdminAuditQuery = {};
+		if (page) query.page = page;
+		if (limit) query.limit = limit;
+		
+		return this.getAuditLog(query);
+	}
+
+	/**
+	 * Introspect token claims and validity
+	 */
+	async introspectToken(data: TokenIntrospectionBody): Promise<ApiResponse<TokenIntrospectionResponse>> {
+		try {
+			return await this.authenticatedRequest((_authHeaders) =>
+				this.apiClient.tokenIntrospection(data)
+			);
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
+	 * Generate CSRF token for subsequent mutating requests
+	 */
+	async generateCsrfToken(): Promise<ApiResponse<CsrfResponse>> {
+		try {
+			return await this.authenticatedRequest((_authHeaders) =>
+				this.apiClient.csrfGenerate()
+			);
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
+	 * Authentication namespace
+	 */
+	get auth() {
+		return {
+			signup: (data: AuthSignupBody) => this.signUp(data),
+			signin: (data: AuthSigninBody) => this.signIn(data),
+			signout: () => this.signOut(),
+			verify: (data: AuthVerifyBody) => this.verifyAccount(data),
+			passwordReset: {
+				request: (data: AuthPasswordResetRequestBody) => this.requestPasswordReset(data),
+				verifyToken: (data: AuthPasswordResetVerifyTokenBody) => this.verifyPasswordResetToken(data),
+				complete: (data: AuthPasswordResetCompleteBody) => this.completePasswordReset(data),
+			},
+		};
+	}
+
+	/**
+	 * MFA (Multi-Factor Authentication) namespace
+	 */
+	get mfa() {
+		return {
+			otp: {
+				send: (data: MfaOtpSendBody) => this.sendOtp(data),
+				verify: (data: MfaOtpVerifyBody) => this.verifyOtp(data),
+				status: () => this.getOtpStatus(),
+				enable: (data: MfaOtpEnableBody) => this.toggleOtp(data),
+			},
+			totp: {
+				verify: (data: MfaTotpVerifyBody) => this.verifyTotp(data),
+			},
+		};
+	}
+
+	/**
+	 * Send OTP code
+	 */
+	async sendOtp(data: MfaOtpSendBody): Promise<ApiResponse<{ code: string }>> {
+		try {
+			return await this.authenticatedRequest((_authHeaders) =>
+				this.apiClient.mfaOtpSend(data)
+			);
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
+	 * Verify OTP code
+	 */
+	async verifyOtp(data: MfaOtpVerifyBody): Promise<ApiResponse<{ accessToken: string; type: string }>> {
+		try {
+			return await this.authenticatedRequest((_authHeaders) =>
+				this.apiClient.mfaOtpVerify(data)
+			);
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
+	 * Get OTP status
+	 */
+	async getOtpStatus(): Promise<ApiResponse<MfaOtpStatusResponse>> {
+		try {
+			return await this.authenticatedRequest((_authHeaders) =>
+				this.apiClient.mfaOtpStatus()
+			);
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
+	 * Enable/disable OTP
+	 */
+	async toggleOtp(data: MfaOtpEnableBody): Promise<ApiResponse<MfaOtpEnableResponse>> {
+		try {
+			return await this.authenticatedRequest((_authHeaders) =>
+				this.apiClient.mfaOtpEnable(data)
+			);
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
+	 * Verify TOTP code
+	 */
+	async verifyTotp(data: MfaTotpVerifyBody): Promise<ApiResponse<MfaTotpVerifyResponse>> {
+		try {
+			return await this.authenticatedRequest((_authHeaders) =>
+				this.apiClient.mfaTotpVerify(data)
+			);
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
+	 * User management namespace
+	 */
+	get user() {
+		return {
+			me: () => this.getUserMe(),
+			devices: () => this.getUserDevices(),
+			changePassword: (data: UserChangePasswordBody) => this.changeUserPassword(data),
+			deleteDevice: (data: UserDeviceDeleteBody) => this.deleteUserDevice(data),
+		};
+	}
+
+	/**
+	 * Get current user profile
+	 */
+	async getUserMe(): Promise<ApiResponse<UserMeResponse>> {
+		try {
+			return await this.authenticatedRequest((_authHeaders) =>
+				this.apiClient.userMe()
+			);
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
+	 * Get user devices
+	 */
+	async getUserDevices(): Promise<ApiResponse<UserDeviceListResponse>> {
+		try {
+			return await this.authenticatedRequest((_authHeaders) =>
+				this.apiClient.userDeviceList()
+			);
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
+	 * Change user password
+	 */
+	async changeUserPassword(data: UserChangePasswordBody): Promise<ApiResponse<UserChangePasswordResponse>> {
+		try {
+			return await this.authenticatedRequest((_authHeaders) =>
+				this.apiClient.userChangePassword(data)
+			);
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
+	 * Delete user device
+	 */
+	async deleteUserDevice(data: UserDeviceDeleteBody): Promise<ApiResponse<UserDeviceDeleteResponse>> {
+		try {
+			return await this.authenticatedRequest((_authHeaders) =>
+				this.apiClient.userDeviceDelete(data)
+			);
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
+	 * Check refresh token validity
+	 */
+	async checkRefreshToken(): Promise<ApiResponse<TokenRefreshTokenResponse>> {
+		try {
+			return await this.authenticatedRequest((_authHeaders) =>
+				this.apiClient.tokenRefreshToken()
+			);
+		} catch (error) {
+			throw this.handleApiError(error);
+		}
+	}
+
+	/**
 	 * Base64 decode helper
 	 */
 	private base64Decode(str: string): string {
@@ -1070,7 +1257,7 @@ export class NotooflyAuthClient {
 			if (response.code === "API.VALIDATOR.ERROR") {
 				return response;
 			}
-			throw new Error(response.message + " " + response.code);
+			throw new Error(`${response.message} ${response.code}`);
 		}
 		return response;
 	}

@@ -13,7 +13,7 @@ const mockFetch = mock(() =>
 				message: "Success",
 				data: {},
 			}),
-		text: () => Promise.resolve("Hello Testing!!!")
+		text: () => Promise.resolve("Hello Testing!!!"),
 	}),
 );
 (global.fetch as any) = mockFetch;
@@ -51,7 +51,7 @@ describe("NotooflyAuthClient", () => {
 						message: "Success",
 						data: {},
 					}),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			}),
 		);
 	});
@@ -86,7 +86,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			// Simulate successful sign in
@@ -125,7 +125,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.signUp({
@@ -152,7 +152,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: false,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			expect(
@@ -174,7 +174,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.signIn({
@@ -196,7 +196,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.verifyAccount({
@@ -222,7 +222,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.sendOtp({
@@ -247,7 +247,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.verifyOtp({ otp: "123456" });
@@ -274,7 +274,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.getProfile();
@@ -293,7 +293,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const newToken = await authClient.refreshToken();
@@ -311,7 +311,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.logout();
@@ -332,7 +332,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.checkRefreshToken();
@@ -355,7 +355,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.introspectToken({ token: "test-token" });
@@ -376,7 +376,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.generateCsrfToken();
@@ -397,7 +397,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.getOtpStatus();
@@ -416,7 +416,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.toggleOtp({ enable: true });
@@ -435,7 +435,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.verifyTotp({ code: "123456" });
@@ -465,7 +465,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.getUserDevices();
@@ -484,7 +484,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.deleteUserDevice({
@@ -506,7 +506,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.requestPasswordReset({
@@ -531,7 +531,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.verifyPasswordResetToken({
@@ -552,7 +552,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.completePasswordReset({
@@ -576,7 +576,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.changePassword({
@@ -611,7 +611,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.getAuditLog({ page: 1, limit: 10 });
@@ -638,7 +638,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			const result = await authClient.checkHealth();
@@ -672,7 +672,7 @@ describe("NotooflyAuthClient", () => {
 							},
 							data: {},
 						}),
-					text: () => Promise.resolve("Hello")
+					text: () => Promise.resolve("Hello"),
 				})
 				.mockResolvedValueOnce({
 					ok: true,
@@ -683,12 +683,12 @@ describe("NotooflyAuthClient", () => {
 							message: "Token refreshed",
 							data: { accessToken: "new-token", type: "Bearer" },
 						}),
-					text: () => Promise.resolve("Hello")
+					text: () => Promise.resolve("Hello"),
 				})
 				.mockResolvedValueOnce({
 					ok: true,
 					json: () => Promise.resolve(mockResponse),
-					text: () => Promise.resolve("Hello")
+					text: () => Promise.resolve("Hello"),
 				});
 
 			const result = await authClient.authenticatedRequest((_headers) =>
@@ -725,7 +725,7 @@ describe("NotooflyAuthClient", () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: true,
 				json: () => Promise.resolve(mockResponse),
-				text: () => Promise.resolve("Hello")
+				text: () => Promise.resolve("Hello"),
 			});
 
 			expect(

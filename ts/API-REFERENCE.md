@@ -22,11 +22,11 @@ Notoofly Auth Client provides three distinct implementations for different envir
 ## Installation
 
 ```bash
-npm install @notoofly/auth-client-node
+npm install @notoofly/auth-client
 # or
-yarn add @notoofly/auth-client-node
+yarn add @notoofly/auth-client
 # or
-pnpm add @notoofly/auth-client-node
+pnpm add @notoofly/auth-client
 ```
 
 ## Quick Start
@@ -34,7 +34,7 @@ pnpm add @notoofly/auth-client-node
 ### Node.js Version
 
 ```typescript
-import { NotooflyAuthClient } from '@notoofly/auth-client-node';
+import { NotooflyAuthClient } from '@notoofly/auth-client';
 
 const authClient = new NotooflyAuthClient({
   authApiUrl: 'https://api.example.com',
@@ -59,7 +59,7 @@ if (result.success) {
 ### React Version
 
 ```tsx
-import { useNotooflyAuth } from '@notoofly/auth-client-node/react';
+import { useNotooflyAuth } from '@notoofly/auth-client/react';
 
 function AuthComponent() {
   const { signIn, isAuthenticated, user, isLoading, error } = useNotooflyAuth({
@@ -97,7 +97,7 @@ function AuthComponent() {
 ### Browser Version
 
 ```typescript
-import { NotooflyAuthClient } from '@notoofly/auth-client-node/browser';
+import { NotooflyAuthClient } from '@notoofly/auth-client/browser';
 
 const authClient = new NotooflyAuthClient({
   authApiUrl: 'https://api.example.com',
@@ -698,7 +698,7 @@ console.log('Client destroyed');
 React Hook that provides authentication state and actions.
 
 ```typescript
-import { useNotooflyAuth } from '@notoofly/auth-client-node/react';
+import { useNotooflyAuth } from '@notoofly/auth-client/react';
 ```
 
 #### Usage
@@ -793,7 +793,7 @@ function AuthComponent() {
 Browser-optimized authentication client with the same API as Node.js version.
 
 ```typescript
-import { NotooflyAuthClient } from '@notoofly/auth-client-node/browser';
+import { NotooflyAuthClient } from '@notoofly/auth-client/browser';
 ```
 
 The API is identical to the Node.js version. See the [Node.js Version](#nodejs-version) section for complete API reference.

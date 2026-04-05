@@ -5,13 +5,13 @@ A TypeScript client for Notoofly authentication API with automatic token managem
 ## Installation
 
 ```bash
-npm install @notoofly-auth/ts-client
+npm install @notoofly/auth-client
 ```
 
 ## Quick Start
 
 ```typescript
-import NotooflyAuthClient from '@notoofly-auth/ts-client';
+import NotooflyAuthClient from '@notoofly/auth-client';
 
 // Initialize the client
 const authClient = new NotooflyAuthClient({
@@ -209,4 +209,4 @@ bun run index.ts
 
 ## License
 
-Proprietary – Read Only
+MIT License – see [LICENSE](LICENSE) file for details.

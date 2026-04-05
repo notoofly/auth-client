@@ -34,7 +34,7 @@ export interface TokenStoreOptions {
  */
 export class TokenStore<K extends string = DefaultTokenType> {
 	private readonly store = new Map<string, TokenEntry>();
-	private readonly options: TokenStoreOptions;
+	public readonly options: TokenStoreOptions;
 
 	constructor(options: TokenStoreOptions = {}) {
 		this.options = options;
@@ -238,5 +238,27 @@ export class TokenStore<K extends string = DefaultTokenType> {
 		}
 
 		return result;
+	}
+
+	/**
+	 * Handle token expiration dengan callback yang tepat
+	 */
+	handle(sub: string, type: K): void {
+		const entry = this.getEntry(sub, type);
+		if (!entry) return;
+
+		if (this.isExpired(entry.payload)) {
+			this.store.delete(this.toKey(sub, type));
+			if (this.options.onExpired) {
+				this.options.onExpired(sub, type);
+			}
+		}
+	}
+
+	/**
+	 * Cek dan handle semua token yang expired
+	 */
+	handleAllExpired(): number {
+		return this.purgeExpired();
 	}
 }
